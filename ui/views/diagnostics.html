@@ -1,0 +1,1064 @@
+<div class="view-panel" hidden="" id="diagnostics-view">
+<div class="section-layout">
+<aside aria-label="Диагностические модули" class="subnav">
+<button class="subnav-item active" data-diagnostic="xid" type="button">
+            XID / Freeze
+          </button>
+<button class="subnav-item" data-diagnostic="pgss" type="button">
+            pg_stat_statements
+          </button>
+<button class="subnav-item" data-diagnostic="autovacuum" type="button">
+            Autovacuum
+          </button>
+<button class="subnav-item" data-diagnostic="io-wal" type="button">
+            I/O &amp; WAL
+          </button>
+<button class="subnav-item" data-diagnostic="index-health" type="button">
+            Index Health
+          </button>
+</aside>
+<div class="section-content">
+<div id="xid-diagnostic">
+<div class="panel-heading">
+<div>
+<h2>XID / Freeze</h2>
+<p class="hint">
+                  Freeze horizon, динамика relations, normal autovacuum triggers,
+                  текущий VACUUM и возможные XMIN blockers.
+                </p>
+</div>
+</div>
+<nav aria-label="Разделы XID / Freeze" class="xid-tabs">
+<button aria-selected="true" class="xid-tab active" data-xid-tab="snapshot" type="button">
+                Состояние
+              </button>
+<button aria-selected="false" class="xid-tab" data-xid-tab="relation" type="button">
+                Relation
+              </button>
+<button aria-selected="false" class="xid-tab" data-xid-tab="methodology" type="button">
+                Как читать
+              </button>
+<button aria-selected="false" class="xid-tab" data-xid-tab="queries" type="button">
+                SQL и источники
+              </button>
+</nav>
+<div class="xid-tab-panel" id="xid-snapshot-tab">
+<div class="xid-controls subpanel">
+<label>
+                  Подключение
+                  <select id="xid-connection"></select>
+</label>
+<button id="collect-xid" type="button">
+                  Собрать снимок
+                </button>
+</div>
+<p class="empty-state" id="xid-empty">
+                Выберите сохранённое подключение и нажмите «Собрать снимок».
+              </p>
+<div class="xid-content" hidden="" id="xid-content">
+<div class="xid-summary">
+<article class="metric-card"><span>PostgreSQL</span><strong id="xid-server-version">—</strong></article>
+<article class="metric-card"><span>База</span><strong id="xid-database-name">—</strong></article>
+<article class="metric-card"><span>Граница XID снимка (xmax)</span><strong id="xid-current-xid">—</strong></article>
+<article class="metric-card"><span>XID age базы</span><strong id="xid-database-age">—</strong></article>
+<article class="metric-card"><span>MultiXact age базы</span><strong id="xid-database-mxid-age">—</strong></article>
+<article class="metric-card"><span>Oldest relation</span><strong id="xid-oldest-relation">—</strong></article>
+<article class="metric-card"><span>Relations snapshot</span><strong id="xid-relation-count">—</strong></article>
+<article class="metric-card"><span>autovacuum_freeze_max_age</span><strong id="xid-freeze-max-age">—</strong></article>
+<article class="metric-card"><span>Autovacuum</span><strong id="xid-autovacuum-state">—</strong></article>
+</div>
+<p class="hint" id="xid-snapshot-meta"></p>
+<div class="diagnostic-section xid-interpretation">
+<div class="diagnostic-heading">
+<div>
+<h3>Что требует внимания</h3>
+<p class="hint">
+                        Верхний уровень показывает findings. Подробности и история конкретной relation
+                        открываются в отдельной вкладке.
+                      </p>
+</div>
+</div>
+<div class="interpretation-list" id="xid-interpretation-list"></div>
+<details class="interpretation-limitations" id="xid-interpretation-limitations">
+<summary>Ограничения интерпретации</summary>
+<ul id="xid-interpretation-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<div class="diagnostic-heading">
+<div>
+<h3>Самые старые relations</h3>
+<p class="hint" id="xid-relations-summary">
+                      Snapshot сохраняет все heap/materialized view/TOAST relations; здесь показаны самые старые.
+                    </p>
+</div>
+</div>
+<p class="section-error" hidden="" id="xid-relations-error"></p>
+<div class="table-wrap xid-relations-overview">
+<table>
+<thead><tr>
+<th>Relation</th><th>OID</th><th>Тип</th><th>XID age</th><th>Effective freeze max</th>
+<th>%</th><th>Размер</th><th>VACUUM / autovacuum</th><th></th>
+</tr></thead>
+<tbody id="xid-relation-list"></tbody>
+</table>
+</div>
+</div>
+<details class="xid-technical">
+<summary>Технические секции snapshot</summary>
+<div class="xid-technical-content">
+<div class="diagnostic-section">
+<h3>Freeze policy</h3>
+<p class="hint">Глобальные настройки, относительно которых нужно читать XID age.</p>
+<dl class="settings-grid">
+<div><dt>autovacuum_multixact_freeze_max_age</dt><dd id="xid-mxid-freeze-max">—</dd></div>
+<div><dt>vacuum_freeze_table_age</dt><dd id="xid-freeze-table-age">—</dd></div>
+<div><dt>vacuum_freeze_min_age</dt><dd id="xid-freeze-min-age">—</dd></div>
+<div><dt>autovacuum_max_workers</dt><dd id="xid-autovacuum-workers">—</dd></div>
+<div><dt>autovacuum_vacuum_cost_limit</dt><dd id="xid-autovacuum-cost-limit">—</dd></div>
+<div><dt>autovacuum_vacuum_cost_delay</dt><dd id="xid-autovacuum-cost-delay">—</dd></div>
+<div><dt>stats_reset</dt><dd id="xid-stats-reset">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section">
+<h3>Возраст баз данных</h3>
+<p class="hint">age(datfrozenxid) и mxid_age(datminmxid) только для баз с datallowconn=true. Остальные базы не включены; это не полный список pg_database.</p>
+<p class="section-error" hidden="" id="xid-databases-error"></p>
+<div class="table-wrap"><table><thead><tr><th>OID</th><th>База</th><th>XID age</th><th>% от global freeze max</th><th>MultiXact age</th><th>% от MXID freeze max</th></tr></thead><tbody id="xid-database-list"></tbody></table></div>
+</div>
+<div class="diagnostic-section">
+<h3>Backend XMIN</h3>
+<p class="hint">Backend с backend_xmin — кандидаты на удержание старого snapshot.</p>
+<p class="section-error" hidden="" id="xid-backends-error"></p>
+<div class="table-wrap"><table><thead><tr><th>PID</th><th>Пользователь / приложение</th><th>State</th><th>XMIN age</th><th>Возраст транзакции</th><th>Ожидание</th></tr></thead><tbody id="xid-backend-list"></tbody></table></div>
+</div>
+<div class="diagnostic-section">
+<h3>Replication slots</h3>
+<p class="hint">Показываются slots, у которых задан xmin или catalog_xmin.</p>
+<p class="section-error" hidden="" id="xid-slots-error"></p>
+<div class="table-wrap"><table><thead><tr><th>Slot</th><th>Тип / база</th><th>Active</th><th>XMIN age</th><th>catalog_xmin age</th></tr></thead><tbody id="xid-slot-list"></tbody></table></div>
+</div>
+<div class="diagnostic-section">
+<h3>Prepared transactions</h3>
+<p class="section-error" hidden="" id="xid-prepared-error"></p>
+<div class="prepared-summary" id="xid-prepared-summary"></div>
+<details id="xid-prepared-examples-wrap" hidden="">
+<summary>Старейшие prepared transactions (не более 10)</summary>
+<div class="table-wrap"><table><thead><tr><th>GID</th><th>XID</th><th>База</th><th>Пользователь</th><th>Подготовлена</th><th>Возраст</th></tr></thead><tbody id="xid-prepared-examples"></tbody></table></div>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Текущий VACUUM</h3>
+<p class="hint">scan_pct показывает прогресс heap scan, а не общий процент завершения VACUUM.</p>
+<p class="section-error" hidden="" id="xid-vacuums-error"></p>
+<div class="table-wrap"><table><thead><tr><th>PID</th><th>Relation</th><th>Backend</th><th>XID age</th><th>Фаза</th><th>Heap scan</th><th>Ожидание</th></tr></thead><tbody id="xid-vacuum-list"></tbody></table></div>
+</div>
+<div class="diagnostic-section">
+<h3>Normal autovacuum triggers</h3>
+<p class="hint" id="xid-triggers-summary">Dead-tuple и insert triggers для всех сохранённых relations. Это отдельный механизм от anti-wraparound VACUUM.</p>
+<p class="section-error" hidden="" id="xid-triggers-error"></p>
+<div class="table-wrap"><table><thead><tr><th>Relation</th><th>Autovacuum</th><th>Rows</th><th>Dead / trigger</th><th>Insert since vacuum / trigger</th><th>Dead reached</th><th>Insert reached</th><th>DML since stats reset</th></tr></thead><tbody id="xid-trigger-list"></tbody></table></div>
+</div>
+<div class="diagnostic-section xid-rate-note">
+<h3>XID rate</h3>
+<p>Snapshot сохраняет верхнюю границу транзакционного снимка <code>pg_snapshot_xmax(pg_current_snapshot())</code> в историческом поле <code>current_xid</code>. Это не назначенный XID pgXray. Темп между снимками приблизительный, не гарантия запуска VACUUM.</p>
+</div>
+</div>
+</details>
+</div>
+</div>
+<div class="xid-tab-panel" hidden="" id="xid-relation-tab">
+<div class="xid-relation-toolbar subpanel">
+<label>
+                  Поиск
+                  <input id="xid-relation-filter" placeholder="schema.table или OID" type="search"/>
+</label>
+<label>
+                  Relation
+                  <select id="xid-relation-select"></select>
+</label>
+<button class="secondary" disabled="" id="xid-open-table-health" type="button">Открыть Table Health</button>
+</div>
+<p class="empty-state" id="xid-relation-empty">
+                Сначала соберите XID snapshot, затем выберите relation.
+              </p>
+<div hidden="" id="xid-relation-content">
+<div class="panel-heading compact-heading">
+<div>
+<h3 id="xid-relation-title">Relation</h3>
+<p class="hint" id="xid-relation-meta"></p>
+</div>
+</div>
+<div class="xid-summary xid-relation-summary">
+<article class="metric-card"><span>XID age</span><strong id="xid-relation-age-detail">—</strong></article>
+<article class="metric-card"><span>Headroom</span><strong id="xid-relation-headroom">—</strong></article>
+<article class="metric-card"><span>MultiXact age</span><strong id="xid-relation-mxid-age">—</strong></article>
+<article class="metric-card"><span>% от MXID freeze max</span><strong id="xid-relation-mxid-pct">—</strong></article>
+<article class="metric-card"><span>% freeze max</span><strong id="xid-relation-pct">—</strong></article>
+<article class="metric-card"><span>Размер</span><strong id="xid-relation-size">—</strong></article>
+<article class="metric-card"><span>All-visible estimate</span><strong id="xid-relation-visible">—</strong></article>
+</div>
+<div class="diagnostic-section">
+<h3>Динамика freeze horizon</h3>
+<p class="hint" id="xid-relation-history-note">Предыдущие значения берутся из сохранённой XID history.</p>
+<p class="section-error" hidden="" id="xid-relation-history-error"></p>
+<div class="table-wrap"><table><thead><tr><th>Snapshot</th><th>Время</th><th>XID age</th><th>Δ к предыдущей точке</th><th>Headroom</th><th>%</th><th>Autovacuum</th><th>Normal trigger</th><th>VACUUM в snapshot</th></tr></thead><tbody id="xid-relation-history-list"></tbody></table></div>
+</div>
+<div class="xid-relation-context-grid">
+<div class="diagnostic-section">
+<h3>Freeze policy</h3>
+<dl class="settings-grid">
+<div><dt>effective freeze max</dt><dd id="xid-relation-freeze-max">—</dd></div>
+<div><dt>freeze max source</dt><dd id="xid-relation-freeze-max-source">—</dd></div>
+<div><dt>effective freeze min</dt><dd id="xid-relation-freeze-min">—</dd></div>
+<div><dt>freeze min source</dt><dd id="xid-relation-freeze-min-source">—</dd></div>
+<div><dt>effective freeze table age</dt><dd id="xid-relation-freeze-table-age">—</dd></div>
+<div><dt>freeze table age source</dt><dd id="xid-relation-freeze-table-source">—</dd></div>
+<div><dt>reloptions</dt><dd id="xid-relation-reloptions">—</dd></div>
+<div><dt>parent / TOAST context</dt><dd id="xid-relation-parent">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section">
+<h3>Maintenance context</h3>
+<dl class="settings-grid">
+<div><dt>last VACUUM</dt><dd id="xid-relation-last-vacuum">—</dd></div>
+<div><dt>last autovacuum</dt><dd id="xid-relation-last-autovacuum">—</dd></div>
+<div><dt>VACUUM / autovacuum count</dt><dd id="xid-relation-vacuum-counts">—</dd></div>
+<div><dt>last ANALYZE</dt><dd id="xid-relation-last-analyze">—</dd></div>
+<div><dt>last autoanalyze</dt><dd id="xid-relation-last-autoanalyze">—</dd></div>
+<div><dt>ANALYZE / autoanalyze count</dt><dd id="xid-relation-analyze-counts">—</dd></div>
+<div><dt>modifications since analyze</dt><dd id="xid-relation-mod-since-analyze">—</dd></div>
+<div><dt>dead tuple trigger</dt><dd id="xid-relation-trigger-dead">—</dd></div>
+<div><dt>insert trigger</dt><dd id="xid-relation-trigger-insert">—</dd></div>
+<div><dt>current VACUUM</dt><dd id="xid-relation-current-vacuum">—</dd></div>
+</dl>
+</div>
+</div>
+<div class="diagnostic-section">
+<h3>Visibility map context</h3>
+<p class="hint">
+                  relallvisible/relpages — оценка all-visible coverage из pg_class. Она помогает читать состояние relation,
+                  но не заменяет точный all-frozen анализ через pg_visibility.
+                </p>
+<dl class="settings-grid">
+<div><dt>estimated rows</dt><dd id="xid-relation-estimated-rows">—</dd></div>
+<div><dt>heap pages</dt><dd id="xid-relation-heap-pages">—</dd></div>
+<div><dt>all-visible pages</dt><dd id="xid-relation-all-visible-pages">—</dd></div>
+<div><dt>all-frozen pages (PostgreSQL 18+)</dt><dd id="xid-relation-all-frozen-pages">—</dd></div>
+<div><dt>all-visible %</dt><dd id="xid-relation-all-visible-pct">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section xid-policy-advisor">
+<div class="panel-heading compact-heading">
+<div>
+<h3>Policy Advisor</h3>
+<p class="hint">Read-only анализ history. Candidate появляется только когда хватает сопоставимых snapshots.</p>
+</div>
+<span class="xid-policy-status" id="xid-policy-status">—</span>
+</div>
+<p id="xid-policy-summary">Выберите relation, чтобы рассчитать policy evidence.</p>
+<p class="section-error" hidden="" id="xid-policy-error"></p>
+<div class="xid-policy-metrics">
+<div><span>History</span><strong id="xid-policy-history">—</strong></div>
+<div><span>XID rate</span><strong id="xid-policy-rate">—</strong></div>
+<div><span>Horizon advance</span><strong id="xid-policy-horizon-advance">—</strong></div>
+<div><span>VACUUM cycles</span><strong id="xid-policy-vacuum-cycles">—</strong></div>
+</div>
+<div class="xid-policy-candidates" id="xid-policy-candidates"></div>
+<details class="xid-policy-evidence" id="xid-policy-evidence">
+<summary>Evidence и ограничения</summary>
+<div class="xid-policy-evidence-grid">
+<div>
+<strong>Наблюдения</strong>
+<ul id="xid-policy-observations"></ul>
+</div>
+<div>
+<strong>Ограничения</strong>
+<ul id="xid-policy-limitations"></ul>
+</div>
+</div>
+</details>
+</div>
+<div class="diagnostic-section xid-relation-next">
+<h3>Следующий шаг</h3>
+<p id="xid-relation-next-step"></p>
+<p class="hint">
+                  Apply выполняется только после повторной проверки OID/name/type, current effective policy и отсутствия active VACUUM. После успешного ALTER pgXray пытается автоматически сохранить post-change XID snapshot.
+                </p>
+</div>
+</div>
+</div>
+<div class="xid-tab-panel" hidden="" id="xid-methodology-tab">
+<p class="hint">
+                Последовательность расследования. Это методика чтения данных,
+                а не автоматический диагноз.
+              </p>
+<div class="reference-list" id="xid-methodology-list"><p class="empty-state">Загрузка методики…</p></div>
+</div>
+<div class="xid-tab-panel" hidden="" id="xid-queries-tab">
+<p class="hint">Здесь показывается тот же SQL, который выполняет текущая версия pgXray, его выдача и правила чтения.</p>
+<div class="reference-list" id="xid-query-list"><p class="empty-state">Загрузка SQL reference…</p></div>
+<div class="diagnostic-section source-section">
+<h3>Первичные источники PostgreSQL</h3>
+<p class="hint" id="xid-source-version">До первого снимка ссылки строятся на current-документацию PostgreSQL.</p>
+<div class="source-list" id="xid-source-list"></div>
+</div>
+</div>
+</div>
+<div hidden="" id="pgss-diagnostic">
+<div class="panel-heading">
+<div>
+<h2>pg_stat_statements</h2>
+<p class="hint">
+                  Health, cardinality и performance diagnostics.
+                  Broad snapshot не выгружает полный SQL; query text открывается только через drill-down.
+                </p>
+</div>
+</div>
+<div class="pgss-controls subpanel">
+<label>
+                Подключение
+                <select id="pgss-connection"></select>
+</label>
+<button id="collect-pgss" type="button">
+                Собрать PGSS snapshot
+              </button>
+</div>
+<nav aria-label="Разделы pg_stat_statements" class="pgss-tabs">
+<button aria-selected="true" class="pgss-tab active" data-pgss-tab="health" type="button">
+                Состояние
+              </button>
+<button aria-selected="false" class="pgss-tab" data-pgss-tab="cardinality" type="button">
+                Cardinality
+              </button>
+<button aria-selected="false" class="pgss-tab" data-pgss-tab="performance" type="button">
+                Performance
+              </button>
+<button aria-selected="false" class="pgss-tab" data-pgss-tab="statement" type="button">
+                Statement
+              </button>
+<button aria-selected="false" class="pgss-tab" data-pgss-tab="methodology" type="button">
+                Как читать
+              </button>
+<button aria-selected="false" class="pgss-tab" data-pgss-tab="queries" type="button">
+                SQL и источники
+              </button>
+</nav>
+<div class="pgss-tab-panel" id="pgss-health-tab">
+<p class="empty-state" id="pgss-health-empty">
+                Соберите PGSS snapshot для выбранного подключения.
+              </p>
+<div hidden="" id="pgss-health-content">
+<div class="pgss-summary">
+<article class="metric-card">
+<span>Extension</span>
+<strong id="pgss-extension-state">—</strong>
+</article>
+<article class="metric-card">
+<span>dealloc</span>
+<strong id="pgss-dealloc">—</strong>
+</article>
+<article class="metric-card">
+<span>Entries</span>
+<strong id="pgss-entries">—</strong>
+</article>
+<article class="metric-card">
+<span>Fill</span>
+<strong id="pgss-fill">—</strong>
+</article>
+<article class="metric-card">
+<span>One-shot entries</span>
+<strong id="pgss-one-call">—</strong>
+</article>
+<article class="metric-card">
+<span>stats_reset</span>
+<strong id="pgss-stats-reset">—</strong>
+</article>
+</div>
+<p class="hint" id="pgss-snapshot-meta"></p>
+<div class="diagnostic-section pgss-interpretation">
+<h3>Интерпретация текущего snapshot</h3>
+<p class="hint">
+                    Наблюдаемый факт, возможное значение и следующий шаг разделены.
+                  </p>
+<div class="interpretation-list" id="pgss-interpretation-list"></div>
+<details class="interpretation-limitations" id="pgss-interpretation-limitations">
+<summary>Ограничения интерпретации</summary>
+<ul id="pgss-interpretation-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>PGSS configuration</h3>
+<dl class="settings-grid">
+<div>
+<dt>extension version</dt>
+<dd id="pgss-extension-version">—</dd>
+</div>
+<div>
+<dt>shared_preload_libraries</dt>
+<dd id="pgss-preload">—</dd>
+</div>
+<div>
+<dt>compute_query_id</dt>
+<dd id="pgss-compute-query-id">—</dd>
+</div>
+<div>
+<dt>pg_stat_statements.max</dt>
+<dd id="pgss-max-entries">—</dd>
+</div>
+<div>
+<dt>track</dt>
+<dd id="pgss-track">—</dd>
+</div>
+<div>
+<dt>track_utility</dt>
+<dd id="pgss-track-utility">—</dd>
+</div>
+<div>
+<dt>track_planning</dt>
+<dd id="pgss-track-planning">—</dd>
+</div>
+<div>
+<dt>save</dt>
+<dd id="pgss-save">—</dd>
+</div>
+<div>
+<dt>track_io_timing</dt>
+<dd id="pgss-track-io-timing">—</dd>
+</div>
+</dl>
+</div>
+<p class="section-error" hidden="" id="pgss-stats-error"></p>
+<p class="section-error" hidden="" id="pgss-capacity-error"></p>
+</div>
+</div>
+<div class="pgss-tab-panel" hidden="" id="pgss-cardinality-tab">
+<p class="empty-state" id="pgss-cardinality-empty">
+                Соберите PGSS snapshot для cardinality analysis.
+              </p>
+<div hidden="" id="pgss-cardinality-content">
+<div class="diagnostic-section">
+<h3>Role / database</h3>
+<p class="hint">
+                    Кто занимает entries. Query text не возвращается.
+                  </p>
+<p class="section-error" hidden="" id="pgss-role-database-error"></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Role / database</th>
+<th>Entries</th>
+<th>Share</th>
+<th>calls=1</th>
+<th>calls≤5</th>
+<th>Total calls</th>
+</tr>
+</thead>
+<tbody id="pgss-role-database-list"></tbody>
+</table>
+</div>
+</div>
+<div class="diagnostic-section">
+<h3>Command distribution</h3>
+<p class="hint">
+                    SQL text используется только внутри PostgreSQL для определения command.
+                  </p>
+<p class="section-error" hidden="" id="pgss-commands-error"></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Role / database</th>
+<th>Entries</th>
+<th>Share</th>
+<th>calls=1</th>
+<th>calls≤5</th>
+<th>Total calls</th>
+</tr>
+</thead>
+<tbody id="pgss-command-list"></tbody>
+</table>
+</div>
+</div>
+<div class="diagnostic-section">
+<h3>CALL targets</h3>
+<p class="hint">
+                    Procedure target наружу не выводится: pgXray показывает только hash-tag,
+                    cardinality и one-shot distribution.
+                  </p>
+<p class="section-error" hidden="" id="pgss-call-targets-error"></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>CALL tag</th>
+<th>Role / database</th>
+<th>Entries</th>
+<th>% от max</th>
+<th>calls=1</th>
+<th>One-shot %</th>
+<th>Total calls</th>
+</tr>
+</thead>
+<tbody id="pgss-call-target-list"></tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="pgss-tab-panel" hidden="" id="pgss-performance-tab">
+<p class="empty-state" id="pgss-performance-empty">
+                Соберите PGSS snapshot для performance analysis.
+              </p>
+<div hidden="" id="pgss-performance-content">
+<div class="performance-toolbar subpanel">
+<label>
+                    Ranking
+                    <select id="pgss-performance-kind">
+<option value="total_exec">Total execution time</option>
+<option value="mean_exec">Mean execution time</option>
+<option value="temp_io">Temp I/O</option>
+<option value="shared_reads">Shared reads</option>
+<option value="wal">WAL bytes</option>
+<option value="variance">Execution variance</option>
+<option value="planning">Planning time</option>
+</select>
+</label>
+</div>
+<p class="hint">Visible rankings остаются TOP-25. Snapshot дополнительно сохраняет bounded history sample до 300 queryid для более устойчивой statement history.</p>
+<p class="section-error" hidden="" id="pgss-performance-error"></p>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>queryid</th>
+<th>Role / DB</th>
+<th>Calls</th>
+<th>Total exec</th>
+<th>Mean / max</th>
+<th>Stddev</th>
+<th>Rows</th>
+<th>Temp W/R</th>
+<th>Shared read/hit</th>
+<th>WAL</th>
+<th>Planning</th>
+<th></th>
+</tr>
+</thead>
+<tbody id="pgss-performance-list"></tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="pgss-tab-panel" hidden="" id="pgss-statement-tab">
+<p class="empty-state" id="pgss-statement-empty">
+                Откройте statement из Performance, чтобы увидеть сохранённую динамику и live SQL.
+              </p>
+<div hidden="" id="pgss-statement-content">
+<div class="panel-heading">
+<div>
+<h3>Statement Investigation</h3>
+<p class="hint" id="pgss-statement-meta"></p>
+</div>
+<button class="secondary" id="close-pgss-query-detail" type="button">К Performance</button>
+</div>
+<div class="pgss-statement-summary">
+<article class="metric-card"><span>Sampled history</span><strong id="pgss-statement-history-span">—</strong></article>
+<article class="metric-card"><span>History sample</span><strong id="pgss-statement-sample-coverage">—</strong></article>
+<article class="metric-card"><span>Latest interval</span><strong id="pgss-statement-latest-interval">—</strong></article>
+<article class="metric-card"><span>Calls Δ / rate</span><strong id="pgss-statement-calls-delta">—</strong></article>
+<article class="metric-card"><span>Exec Δ / interval mean</span><strong id="pgss-statement-exec-delta">—</strong></article>
+<article class="metric-card"><span>Shared reads Δ</span><strong id="pgss-statement-reads-delta">—</strong></article>
+<article class="metric-card"><span>Temp W / R Δ</span><strong id="pgss-statement-temp-delta">—</strong></article>
+<article class="metric-card"><span>WAL Δ</span><strong id="pgss-statement-wal-delta">—</strong></article>
+</div>
+<div class="pgss-statement-quality">
+<span class="pgss-statement-state" id="pgss-statement-delta-state">—</span>
+<p class="hint" id="pgss-statement-delta-note"></p>
+</div>
+<p class="section-error" hidden="" id="pgss-statement-history-error"></p>
+<div class="diagnostic-section pgss-statement-change">
+<div class="diagnostic-heading"><div>
+<h3>Statement Change Analysis</h3>
+<p class="hint">Сравниваются два последних последовательных confirmed intervals. Показатели нормализованы по времени или calls; причинность не утверждается.</p>
+</div><span class="pgss-statement-state" id="pgss-statement-change-status">—</span></div>
+<p class="hint" id="pgss-statement-change-intervals"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Metric</th><th>Previous interval</th><th>Latest interval</th><th>Change</th><th>Evidence</th></tr></thead>
+<tbody id="pgss-statement-change-list"></tbody>
+</table></div>
+<details class="interpretation-limitations" hidden="" id="pgss-statement-change-limitations">
+<summary>Ограничения Change Analysis</summary>
+<ul id="pgss-statement-change-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Saved statement history</h3>
+<p class="hint">Delta рассчитывается только между соседними snapshots при том же stats_reset, неизменном dealloc и monotonic counters. Пропуск TOP sample не считается отсутствием query.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Snapshot</th><th>Время</th><th>State</th><th>Calls</th><th>Total exec</th><th>Cumulative mean</th><th>Δ calls</th><th>Interval mean</th><th>Shared reads Δ</th><th>Temp W/R Δ</th><th>WAL Δ</th></tr></thead>
+<tbody id="pgss-statement-history-list"></tbody>
+</table></div>
+<details class="interpretation-limitations" hidden="" id="pgss-statement-history-limitations">
+<summary>Ограничения statement history</summary>
+<ul id="pgss-statement-history-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Live statement</h3>
+<p class="hint">SQL и current cumulative counters запрашиваются отдельно из PostgreSQL. Entry могла исчезнуть после сохранённого snapshot.</p>
+<div class="subpanel pgss-query-detail" hidden="" id="pgss-query-detail">
+<p class="hint" id="pgss-query-detail-meta"></p>
+<div class="inline-status error" hidden="" id="pgss-query-detail-error"></div>
+<pre class="sql-block"><code id="pgss-query-detail-sql"></code></pre>
+<dl class="settings-grid">
+<div><dt>calls</dt><dd id="pgss-detail-calls">—</dd></div>
+<div><dt>exec total / mean / max / stddev, ms</dt><dd id="pgss-detail-exec">—</dd></div>
+<div><dt>planning total / mean / stddev, ms</dt><dd id="pgss-detail-plan">—</dd></div>
+<div><dt>rows</dt><dd id="pgss-detail-rows">—</dd></div>
+<div><dt>shared hit / read</dt><dd id="pgss-detail-shared">—</dd></div>
+<div><dt>temp read / written</dt><dd id="pgss-detail-temp">—</dd></div>
+<div><dt>WAL bytes</dt><dd id="pgss-detail-wal">—</dd></div>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="pgss-tab-panel" hidden="" id="pgss-methodology-tab">
+<p class="hint">
+                Последовательность диагностики PGSS: availability → health →
+                cardinality → history → performance → drill-down.
+              </p>
+<div class="reference-list" id="pgss-methodology-list">
+<p class="empty-state">Загрузка методики…</p>
+</div>
+</div>
+<div class="pgss-tab-panel" hidden="" id="pgss-queries-tab">
+<p class="hint">
+                Реальные SQL collector-ов текущей версии pgXray и первичные источники PostgreSQL.
+              </p>
+<div class="reference-list" id="pgss-query-list">
+<p class="empty-state">Загрузка SQL reference…</p>
+</div>
+<div class="diagnostic-section source-section">
+<h3>Первичные источники PostgreSQL</h3>
+<p class="hint" id="pgss-source-version"></p>
+<div class="source-list" id="pgss-source-list"></div>
+</div>
+</div>
+</div>
+<div hidden="" id="io-wal-diagnostic">
+<div class="panel-heading"><div>
+<h2>I/O &amp; WAL</h2>
+<p class="hint">Temp, WAL generation, checkpoints и relation-size evidence. Основной сигнал — interval delta/rate, а не накопительный counter.</p>
+</div></div>
+<div class="io-wal-controls subpanel">
+<label>Подключение<select id="io-wal-connection"></select></label>
+<button id="collect-io-wal" type="button">Собрать snapshot</button>
+</div>
+<p class="empty-state" id="io-wal-empty">Выберите подключение и соберите I/O &amp; WAL snapshot.</p>
+<div hidden="" id="io-wal-content">
+<div class="io-wal-summary">
+<article class="metric-card"><span>Database</span><strong id="io-wal-database">—</strong></article>
+<article class="metric-card"><span>Temp files / bytes</span><strong id="io-wal-temp">—</strong></article>
+<article class="metric-card"><span>WAL generated</span><strong id="io-wal-wal">—</strong></article>
+<article class="metric-card"><span>Checkpoints timed / requested</span><strong id="io-wal-checkpoints">—</strong></article>
+<article class="metric-card"><span>Database size</span><strong id="io-wal-db-size">—</strong></article>
+<article class="metric-card"><span>Relation sample</span><strong id="io-wal-relations">—</strong></article>
+</div>
+<p class="hint" id="io-wal-meta"></p>
+<div class="diagnostic-section">
+<h3>Интерпретация snapshot</h3>
+<div class="interpretation-list" id="io-wal-interpretation-list"></div>
+<details class="interpretation-limitations" hidden="" id="io-wal-limitations"><summary>Ограничения</summary><ul id="io-wal-limitations-list"></ul></details>
+</div>
+<div class="diagnostic-section">
+<h3>Database / WAL / Checkpoint counters</h3>
+<p class="section-error" hidden="" id="io-wal-database-error"></p>
+<p class="section-error" hidden="" id="io-wal-wal-error"></p>
+<p class="section-error" hidden="" id="io-wal-checkpoint-error"></p>
+<p class="section-error" hidden="" id="io-wal-db-size-error"></p>
+<dl class="settings-grid">
+<div><dt>database stats_reset</dt><dd id="io-wal-db-stats-reset">—</dd></div>
+<div><dt>database blocks read / hit</dt><dd id="io-wal-db-blocks">—</dd></div>
+<div><dt>database read / write time</dt><dd id="io-wal-db-time">—</dd></div>
+<div><dt>track I/O / WAL timing</dt><dd id="io-wal-track-timing">—</dd></div>
+<div><dt>WAL stats_reset</dt><dd id="io-wal-wal-stats-reset">—</dd></div>
+<div><dt>WAL records / FPI / buffers full</dt><dd id="io-wal-wal-records">—</dd></div>
+<div><dt>WAL write / sync time</dt><dd id="io-wal-wal-time">—</dd></div>
+<div><dt>checkpoint source</dt><dd id="io-wal-checkpoint-source">—</dd></div>
+<div><dt>checkpoint write / sync time</dt><dd id="io-wal-checkpoint-time">—</dd></div>
+<div><dt>checkpoint buffers written</dt><dd id="io-wal-checkpoint-buffers">—</dd></div>
+<div><dt>checkpoint_timeout / completion_target</dt><dd id="io-wal-checkpoint-config">—</dd></div>
+<div><dt>min_wal_size / max_wal_size</dt><dd id="io-wal-wal-config">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section">
+<h3>Relation sizes</h3>
+<p class="hint">Bounded sample крупнейших user relations. Heap — table storage без indexes и отдельно показанного TOAST. Размеры — storage state, не причина изменения.</p>
+<p class="section-error" hidden="" id="io-wal-size-error"></p>
+<div class="table-wrap"><table><thead><tr><th>Relation</th><th>Type</th><th>Heap</th><th>Indexes</th><th>TOAST</th><th>Total</th></tr></thead><tbody id="io-wal-relation-list"></tbody></table></div>
+</div>
+<details class="diagnostic-section"><summary>Как читать и первичные источники</summary><ul id="io-wal-methodology"></ul><div class="source-list" id="io-wal-sources"></div></details>
+</div>
+</div>
+
+<div hidden="" id="index-health-diagnostic">
+<div class="panel-heading"><div>
+<h2>Index Health</h2>
+<p class="hint">Read-only evidence: usage, size, write pressure, validity и structural duplicate candidates. Никаких автоматических DROP.</p>
+</div></div>
+<div class="index-health-controls subpanel">
+<label>Подключение<select id="index-health-connection"></select></label>
+<button id="collect-index-health" type="button">Собрать snapshot</button>
+</div>
+<p class="empty-state" id="index-health-empty">Выберите подключение и соберите Index Health snapshot.</p>
+<div hidden="" id="index-health-content">
+<div class="index-health-summary">
+<article class="metric-card"><span>Indexes sampled / total</span><strong id="index-health-indexes">—</strong></article>
+<article class="metric-card"><span>Actively used</span><strong id="index-health-used">—</strong></article>
+<article class="metric-card"><span>Suspiciously unused</span><strong id="index-health-unused">—</strong></article>
+<article class="metric-card"><span>Possible duplicate</span><strong id="index-health-duplicates">—</strong></article>
+<article class="metric-card"><span>High write overhead</span><strong id="index-health-write-overhead">—</strong></article>
+<article class="metric-card"><span>stats_reset</span><strong id="index-health-stats-reset">—</strong></article>
+</div>
+<p class="hint" id="index-health-meta"></p>
+<div class="index-health-toolbar subpanel">
+<label>Поиск<input id="index-health-filter" type="search" placeholder="schema.table, index или OID"></label>
+<label>Классификация<select id="index-health-mode"><option value="all">Все</option><option value="actively_used">Actively used</option><option value="low_evidence">Low evidence</option><option value="suspiciously_unused">Suspiciously unused</option><option value="possible_duplicate">Возможный дубликат (проверить)</option><option value="high_write_overhead">Возможные затраты на запись</option><option value="needs_investigation">Needs investigation</option></select></label>
+</div>
+<div class="diagnostic-section">
+<h3>Indexes</h3>
+<p class="hint">Classification — evidence-oriented flag. <code>idx_scan=0</code> не является DROP recommendation.</p>
+<div class="table-wrap"><table><thead><tr><th>Relation</th><th>Index</th><th>Size</th><th>Scans</th><th>Tup read/fetch</th><th>Flags</th><th>Keys / predicate</th><th>Relation I/U/D</th><th>HOT</th><th>Last analyze</th><th>Classification</th><th></th></tr></thead><tbody id="index-health-list"></tbody></table></div>
+</div>
+<details class="interpretation-limitations" hidden="" id="index-health-limitations"><summary>Data quality и ограничения</summary><ul id="index-health-limitations-list"></ul></details>
+<details class="diagnostic-section"><summary>Как читать и первичные источники</summary><ul id="index-health-methodology"></ul><div class="source-list" id="index-health-sources"></div></details>
+</div>
+</div>
+
+<div hidden="" id="autovacuum-diagnostic">
+<div class="panel-heading">
+<div>
+<h2>Autovacuum / Table Health</h2>
+<p class="hint">
+                  Диагностика table workload, effective thresholds, VACUUM / ANALYZE cadence,
+                  HOT UPDATE, текущего progress и guarded per-table policy changes.
+                </p>
+</div>
+</div>
+<nav aria-label="Разделы Autovacuum" class="autovacuum-tabs">
+<button aria-selected="true" class="autovacuum-tab active" data-autovacuum-tab="snapshot" type="button">Состояние</button>
+<button aria-selected="false" class="autovacuum-tab" data-autovacuum-tab="table" type="button">Таблица</button>
+<button aria-selected="false" class="autovacuum-tab" data-autovacuum-tab="progress" type="button">Активные процессы</button>
+<button aria-selected="false" class="autovacuum-tab" data-autovacuum-tab="policy" type="button">Manual calculator</button>
+<button aria-selected="false" class="autovacuum-tab" data-autovacuum-tab="methodology" type="button">Как читать</button>
+<button aria-selected="false" class="autovacuum-tab" data-autovacuum-tab="queries" type="button">SQL и источники</button>
+</nav>
+<div class="autovacuum-tab-panel" id="autovacuum-snapshot-tab">
+<div class="xid-controls subpanel">
+<label>
+                  Подключение
+                  <select id="autovacuum-connection"></select>
+</label>
+<button id="collect-autovacuum" type="button">Собрать snapshot</button>
+</div>
+<p class="empty-state" id="autovacuum-empty">
+                Выберите сохранённое подключение и нажмите «Собрать snapshot».
+              </p>
+<p class="section-error" hidden="" id="autovacuum-collect-error" role="alert"></p>
+<div class="autovacuum-content" hidden="" id="autovacuum-content">
+<section class="diagnostic-section autovacuum-collection-status" id="autovacuum-collection-status" hidden="" role="status" aria-live="polite">
+<h3>Снимок собран не полностью</h3>
+<p>Один или несколько разделов недоступны. Прочерк «—» означает отсутствие результата, а не отсутствие проблем в базе.</p>
+<ul id="autovacuum-collection-issues"></ul>
+<p class="hint">Лимиты диагностики не увеличиваются автоматически. При повторяющейся ошибке можно сообщить о ней через Issues репозитория pgXray. Приложи код ошибки, версию PostgreSQL и шаги воспроизведения, но не пароли и не тексты запросов с чувствительными данными.</p>
+</section>
+<p class="hint">Показатели получены несколькими последовательными read-only запросами. Это не атомарный снимок одного момента времени.</p>
+<div class="autovacuum-summary">
+<article class="metric-card"><span>Tables</span><strong id="autovacuum-table-count">—</strong></article>
+<article class="metric-card"><span>Need attention</span><strong id="autovacuum-attention-count">—</strong></article>
+<article class="metric-card"><span>Total size</span><strong id="autovacuum-total-size">—</strong></article>
+<article class="metric-card"><span>Dead tuples</span><strong id="autovacuum-total-dead">—</strong></article>
+<article class="metric-card"><span>Dead trigger reached</span><strong id="autovacuum-dead-reached">—</strong></article>
+<article class="metric-card"><span>Analyze trigger reached</span><strong id="autovacuum-analyze-reached">—</strong></article>
+<article class="metric-card"><span>Active VACUUM</span><strong id="autovacuum-active-vacuum">—</strong></article>
+<article class="metric-card"><span>Active ANALYZE</span><strong id="autovacuum-active-analyze">—</strong></article>
+</div>
+<p class="hint" id="autovacuum-snapshot-meta"></p>
+<div class="diagnostic-section autovacuum-findings">
+<div class="diagnostic-heading"><div>
+<h3>Что требует внимания</h3>
+<p class="hint">Компактный список relations с достигнутыми maintenance triggers, TOAST trigger или отключённым regular autovacuum. История и причины раскрываются в Relation.</p>
+</div></div>
+<div id="autovacuum-finding-list"></div>
+</div>
+<details class="autovacuum-technical">
+<summary>Общая интерпретация и global settings</summary>
+<div class="autovacuum-technical-content">
+<div class="diagnostic-section">
+<h3>Интерпретация текущего snapshot</h3>
+<p class="hint">Факты, возможное значение и следующий шаг разделены. Threshold reached — не автоматический диагноз.</p>
+<div class="interpretation-list" id="autovacuum-interpretation-list"></div>
+<details class="interpretation-limitations" id="autovacuum-interpretation-limitations">
+<summary>Ограничения интерпретации</summary>
+<ul id="autovacuum-interpretation-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Global autovacuum settings</h3>
+<dl class="settings-grid">
+<div><dt>autovacuum</dt><dd id="autovacuum-global-enabled">—</dd></div>
+<div><dt>track_counts</dt><dd id="autovacuum-track-counts">—</dd></div>
+<div><dt>max_workers</dt><dd id="autovacuum-max-workers">—</dd></div>
+<div><dt>naptime</dt><dd id="autovacuum-naptime">—</dd></div>
+<div><dt>vacuum threshold / scale</dt><dd id="autovacuum-global-vacuum-trigger">—</dd></div>
+<div><dt>insert threshold / scale</dt><dd id="autovacuum-global-insert-trigger">—</dd></div>
+<div><dt>analyze threshold / scale</dt><dd id="autovacuum-global-analyze-trigger">—</dd></div>
+<div><dt>vacuum cost limit / delay</dt><dd id="autovacuum-global-cost">—</dd></div>
+<div><dt>stats_reset</dt><dd id="autovacuum-stats-reset">—</dd></div>
+</dl>
+</div>
+</div>
+</details>
+<div class="diagnostic-section" id="autovacuum-table-health-section">
+<div class="diagnostic-heading">
+<div>
+<h3>Table health</h3>
+<p class="hint">Сортировка backend-а ставит выше relation с максимальным использованием dead/insert/analyze trigger.</p>
+</div>
+</div>
+<div class="autovacuum-table-toolbar subpanel">
+<label>Поиск<input id="autovacuum-table-filter" placeholder="schema.table или OID" type="search"/></label>
+<label>Показывать<select id="autovacuum-table-mode">
+<option value="all">Все relations</option>
+<option value="attention">Требуют внимания</option>
+<option value="vacuum">VACUUM trigger</option>
+<option value="analyze">ANALYZE trigger</option>
+<option value="disabled">Autovacuum disabled</option>
+</select></label>
+</div>
+<p class="section-error" hidden="" id="autovacuum-tables-error"></p>
+<div class="history-pager" data-autovacuum-pager="table"></div>
+<div class="table-wrap">
+<table>
+<thead><tr>
+<th>Relation</th><th>Profile</th><th>Size</th><th>Live / dead</th><th>Dead %</th>
+<th>Dead trigger</th><th>Insert trigger</th><th>Analyze trigger</th><th>HOT</th><th>Last autovacuum</th><th></th>
+</tr></thead>
+<tbody id="autovacuum-table-list"></tbody>
+</table>
+</div>
+<div class="history-pager" data-autovacuum-pager="table"></div>
+</div>
+</div>
+</div>
+<div class="autovacuum-tab-panel" hidden="" id="autovacuum-table-tab">
+<p class="empty-state" id="autovacuum-table-empty">
+                Сначала соберите snapshot и откройте relation кнопкой «Подробнее».
+              </p>
+<div hidden="" id="autovacuum-table-content">
+<div class="panel-heading compact-heading">
+<div>
+<h3 id="autovacuum-table-title">Relation</h3>
+<p class="hint" id="autovacuum-table-meta"></p>
+</div>
+</div>
+<div class="autovacuum-summary">
+<article class="metric-card"><span>Workload</span><strong id="autovacuum-detail-profile">—</strong></article>
+<article class="metric-card"><span>Dead tuples</span><strong id="autovacuum-detail-dead">—</strong></article>
+<article class="metric-card"><span>Dead trigger</span><strong id="autovacuum-detail-dead-trigger">—</strong></article>
+<article class="metric-card"><span>HOT</span><strong id="autovacuum-detail-hot">—</strong></article>
+<article class="metric-card"><span>Total size</span><strong id="autovacuum-detail-size">—</strong></article>
+<article class="metric-card"><span>Indexes</span><strong id="autovacuum-detail-index-count">—</strong></article>
+</div>
+<div class="diagnostic-section autovacuum-relation-history">
+<div class="diagnostic-heading"><div>
+<h3>История maintenance</h3>
+<p class="hint" id="autovacuum-relation-history-note">Предыдущие значения берутся из сохранённой Autovacuum history.</p>
+</div></div>
+<div class="autovacuum-history-summary">
+<article class="metric-card"><span>History</span><strong id="autovacuum-relation-history-span">—</strong></article>
+<article class="metric-card"><span>DML rate I / U / D</span><strong id="autovacuum-relation-history-dml">—</strong></article>
+<article class="metric-card"><span>Dead growth</span><strong id="autovacuum-relation-history-dead">—</strong></article>
+<article class="metric-card"><span>VACUUM cycles</span><strong id="autovacuum-relation-history-vacuum">—</strong></article>
+<article class="metric-card"><span>ANALYZE cycles</span><strong id="autovacuum-relation-history-analyze">—</strong></article>
+<article class="metric-card"><span>Interval HOT</span><strong id="autovacuum-relation-history-hot">—</strong></article>
+</div>
+<p class="section-error" hidden="" id="autovacuum-relation-history-error"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Snapshot</th><th>Время</th><th>Live / dead</th><th>Dead trigger</th><th>Insert trigger</th><th>Analyze trigger</th><th>Δ I / U / D</th><th>VACUUM count</th><th>ANALYZE count</th><th>Active</th></tr></thead>
+<tbody id="autovacuum-relation-history-list"></tbody>
+</table></div>
+<details class="interpretation-limitations" hidden="" id="autovacuum-relation-history-limitations">
+<summary>Ограничения history</summary>
+<ul id="autovacuum-relation-history-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section autovacuum-maintenance-advisor">
+<div class="panel-heading compact-heading">
+<div>
+<h3>Maintenance Advisor</h3>
+<p class="hint">History-based read-only анализ VACUUM, insert-driven VACUUM, ANALYZE, TOAST и HOT context. Advisor anchored к сохранённому snapshot; live detail выше может уже отличаться.</p>
+</div>
+<span class="autovacuum-advisor-status" id="autovacuum-advisor-status">—</span>
+</div>
+<h4 id="autovacuum-advisor-title">Сначала откройте relation</h4>
+<p id="autovacuum-advisor-summary">Advisor использует несколько сопоставимых snapshots и не меняет PostgreSQL.</p>
+<p class="hint" id="autovacuum-advisor-anchor">—</p>
+<p class="section-error" hidden="" id="autovacuum-advisor-error"></p>
+<div class="autovacuum-advisor-findings" id="autovacuum-advisor-findings"></div>
+<div class="autovacuum-concrete-policy">
+<h4>Concrete policy candidates</h4>
+<p class="hint" id="autovacuum-concrete-candidates-summary">History-derived scenarios появляются только когда Advisor видит policy candidate и есть clean rate evidence. Apply выполняется отдельно с повторной live-проверкой.</p>
+<p class="section-error" hidden="" id="autovacuum-concrete-candidates-error"></p>
+<div class="autovacuum-concrete-candidates" id="autovacuum-concrete-candidates"></div>
+<details class="interpretation-limitations" hidden id="autovacuum-policy-rollback">
+<summary>Возврат прежней настройки после Apply</summary>
+<p class="hint" id="autovacuum-policy-rollback-note"></p>
+<p class="hint">Это защищённый SQL для отдельного ручного выполнения. Перед запуском проверь подключение и текущие настройки таблицы. pgXray не выполняет откат автоматически.</p>
+<pre><code id="autovacuum-policy-rollback-sql"></code></pre>
+</details>
+<details class="interpretation-limitations" hidden="" id="autovacuum-concrete-candidate-limitations">
+<summary>Ограничения concrete candidates</summary>
+<ul id="autovacuum-concrete-candidate-limitations-list"></ul>
+</details>
+</div>
+<details class="interpretation-limitations" hidden="" id="autovacuum-advisor-limitations">
+<summary>Ограничения Advisor</summary>
+<ul id="autovacuum-advisor-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Интерпретация relation</h3>
+<div class="interpretation-list" id="autovacuum-table-interpretation-list"></div>
+<details class="interpretation-limitations" id="autovacuum-table-interpretation-limitations">
+<summary>Ограничения</summary>
+<ul id="autovacuum-table-interpretation-limitations-list"></ul>
+</details>
+</div>
+<div class="diagnostic-section">
+<h3>Effective policy</h3>
+<dl class="settings-grid">
+<div><dt>autovacuum enabled</dt><dd id="autovacuum-detail-enabled">—</dd></div>
+<div><dt>vacuum threshold</dt><dd id="autovacuum-detail-vacuum-threshold">—</dd></div>
+<div><dt>vacuum scale factor</dt><dd id="autovacuum-detail-vacuum-scale">—</dd></div>
+<div><dt>dead trigger</dt><dd id="autovacuum-detail-vacuum-trigger">—</dd></div>
+<div><dt>insert threshold / scale</dt><dd id="autovacuum-detail-insert-policy">—</dd></div>
+<div><dt>insert trigger</dt><dd id="autovacuum-detail-insert-trigger">—</dd></div>
+<div><dt>analyze threshold / scale</dt><dd id="autovacuum-detail-analyze-policy">—</dd></div>
+<div><dt>analyze trigger</dt><dd id="autovacuum-detail-analyze-trigger">—</dd></div>
+<div><dt>vacuum cost</dt><dd id="autovacuum-detail-cost">—</dd></div>
+<div><dt>freeze max age</dt><dd id="autovacuum-detail-freeze-max">—</dd></div>
+<div><dt>reloptions</dt><dd id="autovacuum-detail-reloptions">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section">
+<h3>Maintenance counters</h3>
+<dl class="settings-grid">
+<div><dt>last vacuum / autovacuum</dt><dd id="autovacuum-detail-last-vacuum">—</dd></div>
+<div><dt>vacuum / autovacuum count</dt><dd id="autovacuum-detail-vacuum-count">—</dd></div>
+<div><dt>last analyze / autoanalyze</dt><dd id="autovacuum-detail-last-analyze">—</dd></div>
+<div><dt>analyze / autoanalyze count</dt><dd id="autovacuum-detail-analyze-count">—</dd></div>
+<div><dt>inserts since vacuum</dt><dd id="autovacuum-detail-inserts-since-vacuum">—</dd></div>
+<div><dt>modifications since analyze</dt><dd id="autovacuum-detail-mod-since-analyze">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section" hidden="" id="autovacuum-toast-section">
+<h3>TOAST maintenance</h3>
+<p class="hint">TOAST — отдельная relation со своими counters и возможными <code>toast.autovacuum_*</code> overrides.</p>
+<dl class="settings-grid">
+<div><dt>Relation</dt><dd id="autovacuum-toast-name">—</dd></div>
+<div><dt>Size</dt><dd id="autovacuum-toast-size">—</dd></div>
+<div><dt>Live / dead</dt><dd id="autovacuum-toast-tuples">—</dd></div>
+<div><dt>Dead trigger</dt><dd id="autovacuum-toast-dead-trigger">—</dd></div>
+<div><dt>Insert trigger</dt><dd id="autovacuum-toast-insert-trigger">—</dd></div>
+<div><dt>Last autovacuum / count</dt><dd id="autovacuum-toast-last-vacuum">—</dd></div>
+<div><dt>XID age</dt><dd id="autovacuum-toast-xid-age">—</dd></div>
+<div><dt>reloptions</dt><dd id="autovacuum-toast-reloptions">—</dd></div>
+</dl>
+</div>
+<div class="diagnostic-section">
+<h3>Indexes / HOT context</h3>
+<p class="section-error" hidden="" id="autovacuum-indexes-error"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>Index</th><th>Flags</th><th>Size</th><th>Key columns</th><th>Predicate</th></tr></thead>
+<tbody id="autovacuum-index-list"></tbody>
+</table></div>
+</div>
+<div class="diagnostic-section">
+<h3>Potential UPDATE statements</h3>
+<p class="hint">Эвристическое сопоставление по query text. Возможны false positives для похожих relation names; это контекст, а не доказанная query → relation связь.</p>
+<p class="section-error" hidden="" id="autovacuum-updates-error"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>queryid</th><th>Calls</th><th>Mean</th><th>Total</th><th>Rows</th><th>SQL</th></tr></thead>
+<tbody id="autovacuum-update-list"></tbody>
+</table></div>
+</div>
+<details class="autovacuum-advanced-calculator">
+<summary>Scale-factor reference</summary>
+<p class="hint">Только перевод процентов в absolute dead-tuple trigger. Это справочник для ручного расчёта, не recommendation.</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Scale factor</th><th>Resulting dead trigger</th></tr></thead>
+<tbody id="autovacuum-scale-candidate-list"></tbody>
+</table></div>
+</details>
+</div>
+</div>
+<div class="autovacuum-tab-panel" hidden="" id="autovacuum-progress-tab">
+<div class="diagnostic-section">
+<h3>VACUUM progress</h3>
+<p class="section-error" hidden="" id="autovacuum-vacuums-error"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>PID</th><th>Relation</th><th>Type</th><th>Phase</th><th>Scan</th><th>Vacuumed</th><th>Index cycles</th><th>Dead items / buffer (PG16: tuples, PG17+: bytes)</th><th>Age</th><th>Wait</th></tr></thead>
+<tbody id="autovacuum-vacuum-list"></tbody>
+</table></div>
+</div>
+<div class="diagnostic-section">
+<h3>ANALYZE progress</h3>
+<p class="section-error" hidden="" id="autovacuum-analyzes-error"></p>
+<div class="table-wrap"><table>
+<thead><tr><th>PID</th><th>Relation</th><th>Type</th><th>Phase</th><th>Sample</th><th>Extended stats</th><th>Children</th><th>Age</th><th>Wait</th></tr></thead>
+<tbody id="autovacuum-analyze-list"></tbody>
+</table></div>
+</div>
+</div>
+<div class="autovacuum-tab-panel" hidden="" id="autovacuum-policy-tab">
+<div class="diagnostic-section">
+<h3>Manual policy calculator</h3>
+<p class="hint">
+                  Advanced-инструмент: задайте желаемый absolute dead-tuple threshold вручную. pgXray только пересчитает scale factor; автоматический Maintenance Advisor будет использовать history и отдельные guardrails.
+                </p>
+<div class="policy-controls">
+<label>Relation<select id="autovacuum-policy-relation"></select></label>
+<label>Target dead tuples<input id="autovacuum-policy-target" min="1" placeholder="140000" step="1" type="number"/></label>
+<button id="simulate-autovacuum-policy" type="button">Рассчитать</button>
+</div>
+<p class="section-error" hidden="" id="autovacuum-policy-error"></p>
+<div hidden="" id="autovacuum-policy-result">
+<div class="comparison-summary">
+<article class="metric-card"><span>Current trigger</span><strong id="autovacuum-policy-current-trigger">—</strong></article>
+<article class="metric-card"><span>Target</span><strong id="autovacuum-policy-target-result">—</strong></article>
+<article class="metric-card"><span>Candidate scale</span><strong id="autovacuum-policy-scale">—</strong></article>
+<article class="metric-card"><span>Resulting trigger</span><strong id="autovacuum-policy-result-trigger">—</strong></article>
+</div>
+<ul id="autovacuum-policy-notes"></ul>
+</div>
+</div>
+</div>
+<div class="autovacuum-tab-panel" hidden="" id="autovacuum-methodology-tab">
+<div class="reference-content" id="autovacuum-methodology-content"></div>
+</div>
+<div class="autovacuum-tab-panel" hidden="" id="autovacuum-queries-tab">
+<div class="reference-content" id="autovacuum-query-content"></div>
+<div class="diagnostic-section">
+<h3>Primary sources</h3>
+<div class="reference-content" id="autovacuum-source-list"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

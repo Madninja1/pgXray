@@ -1,0 +1,31 @@
+<div class="view-panel sessions-view" hidden="" id="sessions-view">
+<div class="panel-heading">
+<div>
+<h2>PostgreSQL-сессии</h2>
+<p class="hint">
+            Настоящий PTY + psql с правами выбранной роли PostgreSQL.
+            pgXray не включает read-only и SQL-таймауты. Команды SQL могут изменять
+            данные; команды psql могут обращаться к локальным файлам и программам.
+          </p>
+</div>
+</div>
+<div class="session-list" id="session-list"></div>
+<p class="empty-state" id="session-empty">
+        Активных сессий пока нет.
+        Откройте «Подключения» и нажмите «Подключиться».
+      </p>
+<div class="terminal-shell" hidden="" id="terminal-shell">
+<div class="terminal-toolbar">
+<div>
+<strong id="terminal-session-title"></strong>
+<span id="terminal-session-state"></span>
+<span id="terminal-config-path"></span>
+</div>
+<button class="danger" id="close-session" type="button">
+            Отключиться
+          </button>
+</div>
+<div aria-live="polite" class="inline-status error" hidden="" id="terminal-error" role="status"></div>
+<div aria-label="Интерактивная psql-сессия" class="terminal-host" id="terminal"></div>
+</div>
+</div>

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pgXray</title>
+
+  <script src="js/theme.js"></script>
+
+  <link rel="stylesheet" href="vendor/xterm/xterm.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script src="vendor/xterm/xterm.js" defer></script>
+  <script src="vendor/xterm/addon-fit.js" defer></script>
+  <script src="js/invoke.js" defer></script>
+  <script src="js/external-links.js" defer></script>
+  <script src="js/core.js" defer></script>
+  <script src="js/activity.js" defer></script>
+  <script src="js/locks.js" defer></script>
+  <script src="js/pg-settings.js" defer></script>
+  <script src="js/changes.js" defer></script>
+  <script src="js/connections.js" defer></script>
+  <script src="js/sessions.js" defer></script>
+  <script src="js/xid.js" defer></script>
+  <script src="js/pgss.js" defer></script>
+  <script src="js/autovacuum.js" defer></script>
+  <script src="js/io-wal.js" defer></script>
+  <script src="js/index-health.js" defer></script>
+  <script src="js/tools.js" defer></script>
+  <script src="js/settings.js" defer></script>
+  <script src="js/settings-extra.js" defer></script>
+  <script src="js/app.js" defer></script>
+</head>
+<body>
+<header class="app-header">
+<strong>pgXray</strong>
+<span>Локальная диагностика PostgreSQL · 0.5.0</span>
+</header>
+
+<main>
+<p aria-live="polite" id="message" role="status">Загрузка…</p>
+
+  <div id="auth-views"></div>
+
+  <section id="workspace-screen" class="workspace" hidden>
+<div class="toolbar">
+<div>
+<h1>Рабочая область</h1>
+<p id="identity"></p>
+</div>
+<button class="secondary" id="logout" type="button">
+        Выйти
+      </button>
+</div>
+<nav aria-label="Основные разделы pgXray" class="main-nav">
+<button aria-selected="true" class="main-nav-item active" data-view="connections" type="button">
+        Подключения
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="diagnostics" type="button">
+        Диагностика
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="activity" type="button">
+        Мониторинг
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="history" type="button">
+        История
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="changes" type="button">
+        Что изменилось?
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="tools" type="button">
+        Инструменты
+      </button>
+<button aria-selected="false" class="main-nav-item" data-view="sessions" type="button">
+        Сессии
+        <span id="session-count">0</span>
+</button>
+<button aria-selected="false" class="main-nav-item" data-view="settings" type="button">
+        Настройки
+      </button>
+</nav>
+
+    <div id="workspace-views"></div>
+  </section>
+</main>
+</body>
+</html>

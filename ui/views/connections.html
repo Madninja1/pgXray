@@ -1,0 +1,88 @@
+<div class="view-panel" id="connections-view">
+<div class="panel-heading">
+<div>
+<h2>Подключения PostgreSQL</h2>
+<p class="hint">
+            Сохранённые профили подключения и активные PostgreSQL-сессии.
+          </p>
+</div>
+<button id="open-connection-create" type="button">
+          + Добавить
+        </button>
+</div>
+<div class="connection-list" id="connection-list"></div>
+<div class="subpanel connection-editor" hidden="" id="connection-editor">
+<h3 id="connection-editor-title">
+          Новое подключение
+        </h3>
+<form id="connection-form" novalidate="">
+<label>
+            Название подключения
+            <input aria-describedby="connection-name-error" maxlength="80" name="name" placeholder="local-dev" required=""/>
+<small class="field-error" data-error-for="name" hidden="" id="connection-name-error"></small>
+</label>
+<div class="grid">
+<label>
+              Сервер
+              <input aria-describedby="connection-host-error" maxlength="253" name="host" required="" value="127.0.0.1"/>
+<small class="field-error" data-error-for="host" hidden="" id="connection-host-error"></small>
+</label>
+<label>
+              Порт
+              <input aria-describedby="connection-port-error" max="65535" min="1" name="port" required="" type="number" value="5432"/>
+<small class="field-error" data-error-for="port" hidden="" id="connection-port-error"></small>
+</label>
+<label>
+              База данных
+              <input aria-describedby="connection-database-error" maxlength="256" name="database" required="" value="postgres"/>
+<small class="field-error" data-error-for="database" hidden="" id="connection-database-error"></small>
+</label>
+<label>
+              Пользователь PostgreSQL
+              <input aria-describedby="connection-username-error" autocomplete="off" maxlength="256" name="username" required="" value="postgres"/>
+<small class="field-error" data-error-for="username" hidden="" id="connection-username-error"></small>
+</label>
+<label>
+              Пароль PostgreSQL
+              <input aria-describedby="connection-password-error" autocomplete="off" maxlength="1024" name="password" type="password"/>
+<small class="field-error" data-error-for="password" hidden="" id="connection-password-error"></small>
+</label>
+<label>
+              TLS
+              <select aria-describedby="connection-sslmode-error" name="sslmode">
+<option value="verify-full">
+                  verify-full — проверять сертификат и имя
+                </option>
+<option value="require">
+                  require — требовать шифрование
+                </option>
+<option value="disable">
+                  disable — без TLS, для локальной лаборатории
+                </option>
+</select>
+<small class="field-error" data-error-for="sslmode" hidden="" id="connection-sslmode-error"></small>
+</label>
+</div>
+<label class="checkbox-label" hidden="" id="remove-password-row">
+<input name="remove_password" type="checkbox"/>
+            Удалить сохранённый пароль
+          </label>
+<p class="hint">
+            Метаданные сохраняются в SQLite.
+            Пароль хранится отдельно в локальном приватном файле с правами 0600.
+          </p>
+<div class="form-actions">
+<button>
+              Проверить данные
+            </button>
+<button class="secondary" id="save-connection" type="button">
+              Сохранить подключение
+            </button>
+<button class="secondary" id="cancel-connection-edit" type="button">
+              Отмена
+            </button>
+</div>
+<div aria-live="polite" class="inline-status" hidden="" id="connection-editor-status" role="status"></div>
+</form>
+</div>
+</div>

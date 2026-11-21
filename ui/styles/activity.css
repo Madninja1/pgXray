@@ -1,0 +1,284 @@
+.activity-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(2, minmax(130px, 1fr));
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.activity-checkbox {
+  align-self: center;
+}
+
+.activity-control-actions {
+  grid-column: 1 / -1;
+}
+
+.activity-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.activity-sample-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.activity-table-section {
+  margin-top: 14px;
+}
+
+.activity-table {
+  min-width: 1180px;
+}
+
+.activity-table td {
+  vertical-align: top;
+}
+
+.activity-query {
+  display: block;
+  max-width: 440px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--code-text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.activity-pgxray-row td {
+  background: var(--surface-3);
+}
+
+.activity-state-active {
+  color: var(--success);
+  font-weight: 650;
+}
+
+.activity-state-idle-xact {
+  color: var(--error);
+  font-weight: 650;
+}
+
+.activity-wait-lock {
+  color: var(--error);
+  font-weight: 650;
+}
+
+.activity-actions {
+  display: grid;
+  gap: 6px;
+  min-width: 150px;
+}
+
+.activity-actions button {
+  width: 100%;
+  padding: 7px 9px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .activity-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .activity-control-actions {
+    grid-column: auto;
+  }
+
+  .activity-sample-summary {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
+/* Monitoring: PostgreSQL settings history */
+
+.pg-settings-controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.pg-settings-actions {
+  justify-content: flex-end;
+}
+
+.pg-settings-summary {
+  margin-top: 14px;
+}
+
+.pg-settings-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.pg-settings-changes-section,
+.pg-settings-current-section,
+.pg-settings-history-section {
+  margin-top: 14px;
+}
+
+.pg-settings-filterbar {
+  display: grid;
+  grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr);
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.pg-settings-table-wrap {
+  max-height: 620px;
+  overflow: auto;
+}
+
+.pg-settings-table {
+  min-width: 1180px;
+}
+
+.pg-settings-changes-table,
+.pg-settings-history-table {
+  min-width: 900px;
+}
+
+.pg-settings-table td,
+.pg-settings-changes-table td,
+.pg-settings-history-table td {
+  vertical-align: top;
+}
+
+.pg-settings-table code,
+.pg-settings-changes-table code {
+  white-space: nowrap;
+}
+
+.pg-settings-change-state {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.pg-settings-row-changed td {
+  background: var(--surface-3);
+}
+
+.pg-settings-changed-value,
+.pg-settings-non-default {
+  color: var(--accent);
+  font-weight: 650;
+}
+
+.pg-settings-restart-required {
+  color: var(--error);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .pg-settings-controls,
+  .pg-settings-filterbar {
+    grid-template-columns: 1fr;
+  }
+
+  .pg-settings-actions {
+    justify-content: stretch;
+  }
+
+  .pg-settings-actions button {
+    width: 100%;
+  }
+
+  .pg-settings-meta {
+    align-items: start;
+    flex-direction: column;
+  }
+}
+
+/* Monitoring: Locks / Waits incident capture */
+
+.locks-controls {
+  display: grid;
+  grid-template-columns: minmax(280px, 2fr) minmax(160px, 1fr);
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.locks-control-actions {
+  grid-column: 1 / -1;
+}
+
+.locks-capture {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin: 14px 0;
+}
+
+.locks-capture p {
+  margin: 5px 0 0;
+}
+
+.locks-chain-table {
+  min-width: 1050px;
+}
+
+.locks-backend-table {
+  min-width: 1450px;
+}
+
+.locks-detail-table {
+  min-width: 900px;
+}
+
+.locks-chain-table td,
+.locks-backend-table td,
+.locks-detail-table td {
+  vertical-align: top;
+}
+
+.locks-root-row td {
+  background: var(--surface-3);
+}
+
+.locks-idle-root-row td {
+  background: var(--surface-3);
+}
+
+.locks-idle-root-row td:first-child,
+.locks-idle-root-row td:nth-child(5) {
+  color: var(--error);
+  font-weight: 650;
+}
+
+.locks-technical {
+  margin-top: 14px;
+}
+
+@media (max-width: 900px) {
+  .locks-controls,
+  .locks-capture {
+    grid-template-columns: 1fr;
+  }
+
+  .locks-control-actions {
+    grid-column: auto;
+  }
+}
+
+.locks-capture-state {
+  grid-column: 1 / -1;
+  margin: 0;
+}

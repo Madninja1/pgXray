@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1"
+  >
+  <title>pgXray · PEV2</title>
+
+  <link
+          rel="stylesheet"
+          href="../vendor/pev2/bootstrap.min.css"
+  >
+  <link
+          rel="stylesheet"
+          href="../vendor/pev2/pev2.css"
+  >
+
+  <style>
+    html,
+    body,
+    #app {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      background: #fff;
+    }
+
+    .pgxray-pev-root { width: 100%; min-height: 100vh; }
+
+    .pgxray-pev-empty {
+      display: grid;
+      min-height: 100vh;
+      place-items: center;
+      padding: 32px;
+      color: #5b6670;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+    }
+
+    .pgxray-pev-error {
+      max-width: 720px;
+      padding: 16px;
+      border: 1px solid #d8a0a8;
+      border-radius: 8px;
+      background: #fff1f3;
+      color: #8b2331;
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <script src="../vendor/pev2/vue.global.prod.js"></script>
+  <script src="../vendor/pev2/pev2.umd.js"></script>
+  <script src="bridge.js" defer></script>
+</head>
+<body>
+<div id="app">
+  <div class="pgxray-pev-empty">
+    Откройте EXPLAIN JSON в разделе «Планы» pgXray.
+  </div>
+</div>
+</body>
+</html>

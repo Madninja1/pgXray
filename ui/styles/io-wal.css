@@ -1,0 +1,4 @@
+.io-wal-controls { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:end; margin-bottom:18px; }
+.io-wal-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,170px),1fr)); gap:12px; }
+#io-wal-relation-list { font-variant-numeric: tabular-nums; }
+@media (max-width:720px){.io-wal-controls{grid-template-columns:1fr;}}

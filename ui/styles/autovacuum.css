@@ -1,0 +1,345 @@
+/* Autovacuum / Table Health */
+
+.autovacuum-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.autovacuum-tab {
+  flex: 0 0 auto;
+  margin-bottom: -1px;
+  padding: 10px 14px;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 7px 7px 0 0;
+  background: transparent;
+  color: var(--muted);
+}
+
+.autovacuum-tab.active {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.autovacuum-tab-panel,
+.autovacuum-content {
+  min-width: 0;
+}
+
+.autovacuum-content,
+#autovacuum-table-content {
+  display: grid;
+  gap: 18px;
+}
+
+.autovacuum-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 12px;
+  min-width: 0;
+}
+
+.autovacuum-collection-status {
+  border-color: var(--error-border);
+  background: var(--error-bg);
+}
+
+.autovacuum-collection-status li {
+  margin: 8px 0;
+  overflow-wrap: anywhere;
+}
+
+.autovacuum-collection-status .hint {
+  margin-bottom: 0;
+}
+
+.policy-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 260px) auto;
+  gap: 14px;
+  align-items: end;
+  margin: 16px 0;
+}
+
+.compact-heading {
+  margin-bottom: 0;
+}
+
+.compact-button {
+  padding: 7px 10px;
+  font-size: 13px;
+}
+
+#autovacuum-snapshot-meta,
+#autovacuum-table-meta,
+#autovacuum-compare-meta {
+  overflow-wrap: anywhere;
+}
+
+#autovacuum-update-list td:last-child {
+  min-width: 420px;
+  max-width: 720px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+#autovacuum-policy-notes {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+#autovacuum-policy-notes li {
+  margin: 6px 0;
+}
+
+@media (max-width: 720px) {
+  .autovacuum-tabs {
+    margin-left: -4px;
+    margin-right: -4px;
+  }
+
+  .policy-controls {
+    grid-template-columns: 1fr;
+  }
+}
+
+.autovacuum-findings #autovacuum-finding-list {
+  display: grid;
+  gap: 10px;
+}
+
+.autovacuum-finding {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.autovacuum-finding-main {
+  min-width: 0;
+}
+
+.autovacuum-finding-main p {
+  margin: 4px 0 0;
+}
+
+.autovacuum-finding-reason {
+  overflow-wrap: anywhere;
+}
+
+.autovacuum-table-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(190px, 280px);
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.autovacuum-row-attention td:first-child {
+  font-weight: 600;
+}
+
+.autovacuum-technical,
+.autovacuum-advanced-calculator {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.autovacuum-technical > summary,
+.autovacuum-advanced-calculator > summary {
+  cursor: pointer;
+  padding: 12px 14px;
+  font-weight: 600;
+}
+
+.autovacuum-technical-content {
+  display: grid;
+  gap: 14px;
+  padding: 0 12px 12px;
+}
+
+.autovacuum-advanced-calculator > :not(summary) {
+  margin-left: 14px;
+  margin-right: 14px;
+}
+
+.autovacuum-advanced-calculator > :last-child {
+  margin-bottom: 14px;
+}
+
+.autovacuum-interpretation-card > summary {
+  cursor: pointer;
+}
+
+.autovacuum-history-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr));
+  gap: 10px;
+  margin: 12px 0 14px;
+}
+
+#autovacuum-relation-history-list td:nth-child(7),
+#autovacuum-relation-history-list td:nth-child(10) {
+  white-space: nowrap;
+}
+
+@media (max-width: 720px) {
+  .autovacuum-finding {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .autovacuum-table-toolbar {
+    grid-template-columns: 1fr;
+  }
+}
+
+.autovacuum-maintenance-advisor {
+  display: grid;
+  gap: 10px;
+}
+
+.autovacuum-advisor-status,
+.autovacuum-advisor-finding-status,
+.autovacuum-advisor-area {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.autovacuum-advisor-status {
+  font-weight: 600;
+}
+
+.autovacuum-advisor-findings {
+  display: grid;
+  gap: 10px;
+}
+
+.autovacuum-advisor-finding {
+  padding: 0 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.autovacuum-advisor-finding > summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.autovacuum-advisor-finding > p {
+  margin-top: 0;
+}
+
+.autovacuum-advisor-finding ul {
+  margin-top: 6px;
+}
+
+.autovacuum-advisor-parameters {
+  display: block;
+  margin: 6px 0 12px;
+  overflow-wrap: anywhere;
+}
+
+.autovacuum-advisor-finding.status-investigate,
+.autovacuum-advisor-finding.status-candidate,
+.autovacuum-advisor-finding.status-review {
+  font-weight: inherit;
+}
+
+@media (max-width: 720px) {
+  .autovacuum-advisor-finding > summary {
+    grid-template-columns: 1fr;
+  }
+}
+
+.autovacuum-concrete-policy {
+  display: grid;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.autovacuum-concrete-policy > h4 {
+  margin-bottom: 0;
+}
+
+.autovacuum-concrete-candidates {
+  display: grid;
+  gap: 10px;
+}
+
+.autovacuum-concrete-candidate {
+  padding: 0 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+}
+
+.autovacuum-concrete-candidate > summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  padding: 12px 0;
+  cursor: pointer;
+}
+
+.autovacuum-concrete-candidate > summary code {
+  overflow-wrap: anywhere;
+}
+
+.autovacuum-candidate-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.autovacuum-candidate-metrics > div {
+  display: grid;
+  gap: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+
+.autovacuum-candidate-metrics span {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.autovacuum-candidate-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+@media (max-width: 720px) {
+  .autovacuum-concrete-candidate > summary {
+    grid-template-columns: 1fr;
+  }
+}

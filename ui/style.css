@@ -1,0 +1,14 @@
+@import url("styles/tokens.css");
+@import url("styles/base.css");
+@import url("styles/xid.css");
+@import url("styles/history.css");
+@import url("styles/changes.css");
+@import url("styles/pgss.css");
+@import url("styles/autovacuum.css");
+@import url("styles/activity.css");
+@import url("styles/themes.css");
+@import url("styles/tools.css");
+@import url("styles/settings.css");
+
+@import url("styles/io-wal.css");
+@import url("styles/index-health.css");

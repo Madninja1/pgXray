@@ -1,0 +1,6 @@
+.index-health-controls,.index-health-toolbar { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:16px; align-items:end; margin-bottom:18px; }
+.index-health-summary { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr)); gap:12px; }
+.index-health-toolbar { grid-template-columns:minmax(180px,1fr) minmax(180px,280px); }
+#index-health-list { font-variant-numeric: tabular-nums; }
+.index-health-table-button { white-space:nowrap; }
+@media (max-width:720px){.index-health-controls,.index-health-toolbar{grid-template-columns:1fr;}}

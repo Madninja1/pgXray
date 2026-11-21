@@ -1,0 +1,377 @@
+<section class="view-panel" id="activity-view" hidden>
+  <div class="section-layout">
+    <aside aria-label="Разделы мониторинга PostgreSQL" class="subnav">
+      <button class="subnav-item active" data-monitoring-tab="activity" type="button">Активность</button>
+      <button class="subnav-item" data-monitoring-tab="locks" type="button">Locks / Waits</button>
+      <button class="subnav-item" data-monitoring-tab="settings" type="button">Настройки PostgreSQL</button>
+    </aside>
+
+    <div class="section-content">
+      <div id="monitoring-activity-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Мониторинг PostgreSQL activity</h2>
+            <p class="hint">
+              Короткие snapshots из pg_stat_activity. Это оценка session/query activity, а не CPU/IO
+              monitor. Монитор использует отдельное краткоживущее подключение и не блокирует diagnostics.
+              Query text других пользователей может быть скрыт правами PostgreSQL.
+            </p>
+          </div>
+        </div>
+
+        <div class="activity-controls subpanel">
+          <label>
+            Подключение
+            <select id="activity-connection"></select>
+          </label>
+
+          <label>
+            Интервал
+            <select id="activity-interval">
+              <option value="2000">2 секунды</option>
+              <option value="5000" selected>5 секунд</option>
+              <option value="10000">10 секунд</option>
+            </select>
+          </label>
+
+          <label>
+            Длительность
+            <select id="activity-duration">
+              <option value="30000">30 секунд</option>
+              <option value="60000" selected>1 минута</option>
+              <option value="300000">5 минут</option>
+            </select>
+          </label>
+
+          <label class="checkbox-label activity-checkbox">
+            <input id="activity-hide-idle" type="checkbox">
+            Скрывать idle
+          </label>
+
+          <div class="form-actions activity-control-actions">
+            <button id="activity-start" type="button">Запустить мониторинг</button>
+            <button class="secondary" id="activity-stop" type="button" disabled>Остановить</button>
+            <button class="secondary" id="activity-refresh" type="button">Обновить один раз</button>
+          </div>
+        </div>
+
+        <p class="inline-status" id="activity-status">Выберите connection и запустите мониторинг.</p>
+
+        <div class="activity-summary" id="activity-summary">
+          <article class="metric-card">
+            <span>Подключения</span>
+            <strong id="activity-total">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Active</span>
+            <strong id="activity-active">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Active + wait event</span>
+            <strong id="activity-waiting">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Idle in transaction</span>
+            <strong id="activity-idle-xact">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>pgXray connections</span>
+            <strong id="activity-pgxray">—</strong>
+          </article>
+        </div>
+
+        <div class="subpanel activity-sample-summary">
+          <strong id="activity-sample-stats">Сессия мониторинга ещё не запускалась.</strong>
+          <span class="hint" id="activity-captured-at"></span>
+        </div>
+
+        <div class="diagnostic-section activity-table-section">
+          <div class="panel-heading">
+            <div>
+              <h3>Текущие backend processes</h3>
+              <p class="hint">
+                Cancel отправляет SIGINT текущему query и сохраняет соединение. Terminate отправляет
+                SIGTERM backend и обрывает сессию; открытая транзакция будет rollback. pgXray разрешает
+                эти действия только для client backend. PostgreSQL дополнительно проверяет права роли.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="activity-table">
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th>DB / user</th>
+                  <th>Application / client</th>
+                  <th>State</th>
+                  <th>Query age</th>
+                  <th>Xact age</th>
+                  <th>Wait</th>
+                  <th>Query</th>
+                  <th>Действия</th>
+                </tr>
+              </thead>
+              <tbody id="activity-backends"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div id="monitoring-locks-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>Locks / Waits</h2>
+            <p class="hint">
+              Live blocking graph через pg_blocking_pids + pg_stat_activity + pg_locks.
+              pgXray показывает blocked → blocker → root blocker и позволяет сохранить evidence до исчезновения lock chain.
+            </p>
+          </div>
+        </div>
+
+        <div class="locks-controls subpanel">
+          <label>
+            Подключение
+            <select id="locks-connection"></select>
+          </label>
+
+          <label>
+            Интервал live monitor
+            <select id="locks-interval">
+              <option value="1000">1 секунда</option>
+              <option value="2000" selected>2 секунды</option>
+              <option value="5000">5 секунд</option>
+            </select>
+          </label>
+
+          <div class="form-actions locks-control-actions">
+            <button id="locks-start" type="button">Запустить live</button>
+            <button class="secondary" id="locks-stop" type="button" disabled>Остановить</button>
+            <button class="secondary" id="locks-refresh" type="button">Обновить один раз</button>
+          </div>
+        </div>
+
+        <p class="inline-status" id="locks-status">Выберите connection и получите Locks / Waits snapshot.</p>
+
+        <div class="activity-summary locks-summary">
+          <article class="metric-card"><span>Blocked</span><strong id="locks-blocked">—</strong></article>
+          <article class="metric-card"><span>Direct blockers</span><strong id="locks-blockers">—</strong></article>
+          <article class="metric-card"><span>Root blockers</span><strong id="locks-roots">—</strong></article>
+          <article class="metric-card"><span>Idle in xact roots</span><strong id="locks-idle-roots">—</strong></article>
+          <article class="metric-card"><span>Max chain depth</span><strong id="locks-depth">—</strong></article>
+        </div>
+
+        <div class="subpanel locks-capture">
+          <div>
+            <strong>Incident evidence</strong>
+            <p class="hint">
+              Сохраняется лучший удержанный blocking snapshot текущего incident плюс companion
+              pg_stat_activity из того же monitor cycle. Если Case не выбран, pgXray создаст новый incident Case.
+            </p>
+          </div>
+          <label>
+            Case
+            <select id="locks-case"></select>
+          </label>
+          <button id="locks-save-case" type="button" disabled>Save to Case</button>
+          <p class="hint locks-capture-state" id="locks-capture-state">Incident snapshot ещё не захвачен.</p>
+        </div>
+
+        <div class="diagnostic-section">
+          <div class="panel-heading compact-heading">
+            <div>
+              <h3>Blocking chains</h3>
+              <p class="hint">Каждая строка — один путь от blocked backend к root blocker. Один blocked PID может иметь несколько путей.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="locks-chain-table">
+              <thead><tr><th>Path</th><th>Blocked</th><th>Wait</th><th>Root blocker</th><th>Root state</th><th>Root xact age</th></tr></thead>
+              <tbody id="locks-chain-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="diagnostic-section">
+          <div class="panel-heading compact-heading">
+            <div>
+              <h3>Relevant backends</h3>
+              <p class="hint">Только blocked backends и их blockers. Query ID показывается where available; query text зависит от PostgreSQL privileges.</p>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table class="locks-backend-table">
+              <thead><tr><th>PID</th><th>Role / DB</th><th>Application</th><th>State / age</th><th>Xact age</th><th>Query age</th><th>Wait</th><th>queryid</th><th>Query</th><th>Действия</th></tr></thead>
+              <tbody id="locks-backend-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <details class="locks-technical">
+          <summary>Lock details и ограничения snapshot</summary>
+          <div class="diagnostic-section">
+            <p class="hint" id="locks-meta"></p>
+            <ul id="locks-limitations"></ul>
+            <div class="table-wrap">
+              <table class="locks-detail-table">
+                <thead><tr><th>PID</th><th>Granted</th><th>Type</th><th>Mode</th><th>Relation / object</th><th>Wait start</th></tr></thead>
+                <tbody id="locks-detail-list"></tbody>
+              </table>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div id="monitoring-settings-panel" hidden>
+        <div class="panel-heading">
+          <div>
+            <h2>Настройки PostgreSQL</h2>
+            <p class="hint">
+              pgXray сохраняет снимки pg_settings и сравнивает их во времени. Автосрез выполняется
+              раз в 24 часа, пока pgXray запущен; после следующего входа пропущенный срез догоняется.
+              Точное время внешнего изменения PostgreSQL неизвестно: pgXray показывает интервал между
+              последним старым и первым новым snapshot.
+            </p>
+          </div>
+        </div>
+
+        <div class="pg-settings-controls subpanel">
+          <label>
+            Подключение
+            <select id="pg-settings-connection"></select>
+          </label>
+
+          <div class="form-actions pg-settings-actions">
+            <button id="pg-settings-collect" type="button">Снять snapshot сейчас</button>
+            <button class="secondary" id="pg-settings-refresh" type="button">Обновить историю</button>
+          </div>
+        </div>
+
+        <p class="inline-status" id="pg-settings-status">Выберите connection.</p>
+
+        <div class="activity-summary pg-settings-summary">
+          <article class="metric-card">
+            <span>Параметров</span>
+            <strong id="pg-settings-total">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Не default</span>
+            <strong id="pg-settings-non-default">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Pending restart</span>
+            <strong id="pg-settings-pending-restart">—</strong>
+          </article>
+          <article class="metric-card">
+            <span>Изменено с прошлого среза</span>
+            <strong id="pg-settings-changed">—</strong>
+          </article>
+        </div>
+
+        <div class="subpanel pg-settings-meta">
+          <strong id="pg-settings-snapshot-meta">Снимков пока нет.</strong>
+          <span class="hint" id="pg-settings-change-window"></span>
+        </div>
+
+        <div class="diagnostic-section pg-settings-changes-section">
+          <div class="panel-heading">
+            <div>
+              <h3>Последние изменения</h3>
+              <p class="hint">
+                Изменение считается обнаруженным между двумя соседними snapshots. Отдельно отслеживаются
+                effective value, reset value, source/sourcefile и pending_restart.
+              </p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="pg-settings-changes-table">
+              <thead>
+                <tr>
+                  <th>Параметр</th>
+                  <th>Было</th>
+                  <th>Стало</th>
+                  <th>Источник</th>
+                  <th>Где новое значение</th>
+                  <th>Окно изменения</th>
+                  <th>Restart</th>
+                </tr>
+              </thead>
+              <tbody id="pg-settings-changes"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="diagnostic-section pg-settings-current-section">
+          <div class="panel-heading">
+            <div>
+              <h3>Текущее состояние pg_settings</h3>
+              <p class="hint">
+                sourcefile/sourceline PostgreSQL может скрывать без достаточных прав. Значения показаны
+                в единицах pg_settings; для параметров с unit число относится к указанной единице.
+              </p>
+            </div>
+          </div>
+
+          <div class="pg-settings-filterbar subpanel">
+            <label>
+              Поиск
+              <input id="pg-settings-search" type="search" placeholder="work_mem / autovacuum / shared_buffers" autocomplete="off">
+            </label>
+
+            <label>
+              Фильтр
+              <select id="pg-settings-filter">
+                <option value="all">Все</option>
+                <option value="changed">Изменённые</option>
+                <option value="non_default">Не default</option>
+                <option value="pending_restart">Требуют restart</option>
+              </select>
+            </label>
+          </div>
+
+          <div class="table-wrap pg-settings-table-wrap">
+            <table class="pg-settings-table">
+              <thead>
+                <tr>
+                  <th>Параметр</th>
+                  <th>Значение</th>
+                  <th>Категория</th>
+                  <th>Source</th>
+                  <th>Context</th>
+                  <th>Файл / строка</th>
+                  <th>Restart</th>
+                </tr>
+              </thead>
+              <tbody id="pg-settings-current"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="diagnostic-section pg-settings-history-section">
+          <div class="panel-heading">
+            <div>
+              <h3>История snapshots</h3>
+              <p class="hint">Хранение подчиняется общему retention истории pgXray.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table class="pg-settings-history-table">
+              <thead>
+                <tr>
+                  <th>Срез</th>
+                  <th>PostgreSQL</th>
+                  <th>Параметров</th>
+                  <th>Изменено</th>
+                  <th>Pending restart</th>
+                </tr>
+              </thead>
+              <tbody id="pg-settings-history"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

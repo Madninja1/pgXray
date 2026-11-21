@@ -1,0 +1,201 @@
+<div class="view-panel" hidden id="changes-view">
+  <div class="panel-heading">
+    <div>
+      <h2>What Changed?</h2>
+      <p class="hint">
+        Сравнение baseline и incident periods по pg_stat_statements, pg_settings, Autovacuum/Table Health, XID, I/O & WAL и Index Health.
+        Результат показывает observed/confirmed changes и не объявляет причинность.
+      </p>
+    </div>
+  </div>
+
+  <div class="changes-period-controls subpanel">
+    <label>
+      Подключение
+      <select id="changes-connection"></select>
+    </label>
+    <fieldset>
+      <legend>Baseline</legend>
+      <label>От <input id="changes-baseline-from" type="datetime-local"></label>
+      <label>До <input id="changes-baseline-to" type="datetime-local"></label>
+    </fieldset>
+    <fieldset>
+      <legend>Incident</legend>
+      <label>От <input id="changes-incident-from" type="datetime-local"></label>
+      <label>До <input id="changes-incident-to" type="datetime-local"></label>
+    </fieldset>
+    <button id="compare-what-changed" type="button">Сравнить periods</button>
+  </div>
+
+  <div class="diagnostic-section changes-markers">
+    <div class="diagnostic-heading">
+      <div>
+        <h3>Manual markers</h3>
+        <p class="hint">Deploy/config/query/index/maintenance события, известные человеку. Marker — observed event, не доказательство причины.</p>
+      </div>
+    </div>
+    <div class="changes-marker-form subpanel">
+      <label>Время <input id="changes-marker-time" type="datetime-local"></label>
+      <label>
+        Тип
+        <select id="changes-marker-kind">
+          <option value="deploy">Deploy</option>
+          <option value="postgresql_config">PostgreSQL config</option>
+          <option value="index">Index</option>
+          <option value="query">Query</option>
+          <option value="application">Application</option>
+          <option value="maintenance">Maintenance</option>
+          <option value="other">Other</option>
+        </select>
+      </label>
+      <label>Название <input id="changes-marker-title" maxlength="160" placeholder="Deploy backend v2.7"></label>
+      <label class="changes-marker-note">Описание <input id="changes-marker-note" maxlength="4000" placeholder="Опциональный контекст"></label>
+      <button id="add-change-marker" type="button">Добавить marker</button>
+    </div>
+    <p class="section-error" hidden id="changes-marker-error"></p>
+    <div id="changes-marker-list" class="changes-marker-list"></div>
+  </div>
+
+  <p class="empty-state" id="changes-empty">
+    Выберите непересекающиеся baseline/incident periods и выполните сравнение.
+  </p>
+  <p class="section-error" hidden id="changes-error"></p>
+
+  <div hidden id="changes-content">
+    <div class="changes-summary">
+      <article class="metric-card"><span>Target</span><strong id="changes-target">—</strong></article>
+      <article class="metric-card"><span>PGSS baseline</span><strong id="changes-pgss-baseline-quality">—</strong></article>
+      <article class="metric-card"><span>PGSS incident</span><strong id="changes-pgss-incident-quality">—</strong></article>
+      <article class="metric-card"><span>Settings</span><strong id="changes-settings-quality">—</strong></article>
+      <article class="metric-card"><span>Autovac baseline</span><strong id="changes-autovacuum-baseline-quality">—</strong></article>
+      <article class="metric-card"><span>Autovac incident</span><strong id="changes-autovacuum-incident-quality">—</strong></article>
+      <article class="metric-card"><span>XID baseline</span><strong id="changes-xid-baseline-quality">—</strong></article>
+      <article class="metric-card"><span>XID incident</span><strong id="changes-xid-incident-quality">—</strong></article>
+      <article class="metric-card"><span>Storage baseline</span><strong id="changes-storage-baseline-quality">—</strong></article>
+      <article class="metric-card"><span>Storage incident</span><strong id="changes-storage-incident-quality">—</strong></article>
+      <article class="metric-card"><span>Index Health</span><strong id="changes-index-health-quality">—</strong></article>
+      <article class="metric-card"><span>Statement changes</span><strong id="changes-statement-count">—</strong></article>
+      <article class="metric-card"><span>Setting changes</span><strong id="changes-setting-count">—</strong></article>
+      <article class="metric-card"><span>Table changes</span><strong id="changes-autovacuum-count">—</strong></article>
+      <article class="metric-card"><span>XID relations</span><strong id="changes-xid-count">—</strong></article>
+      <article class="metric-card"><span>Size changes</span><strong id="changes-size-count">—</strong></article>
+      <article class="metric-card"><span>Index evidence</span><strong id="changes-index-count">—</strong></article>
+    </div>
+    <p class="hint" id="changes-period-meta"></p>
+
+    <div class="diagnostic-section changes-save">
+      <div class="diagnostic-heading">
+        <div>
+          <h3>Сохранить evidence</h3>
+          <p class="hint">Сохраняется server-side пересчитанный результат. Можно выбрать Case или создать incident Case автоматически.</p>
+        </div>
+      </div>
+      <div class="changes-save-controls">
+        <label>Case <select id="changes-case"></select></label>
+        <button id="save-what-changed" type="button">Save to Case</button>
+      </div>
+      <p class="section-error" hidden id="changes-save-error"></p>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>Timeline</h3>
+      <p class="hint">Settings и manual markers имеют конкретное observed time. PGSS period changes привязаны к последней sampled point incident period.</p>
+      <div id="changes-timeline" class="changes-timeline"></div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>pg_stat_statements changes</h3>
+      <p class="hint">Сортировка — по максимальному observed execution workload/hour, не severity/risk ranking.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Statement</th><th>State</th><th>Calls/h</th><th>Exec ms/call</th><th>Exec/h</th>
+            <th>Reads/call</th><th>Temp W/call</th><th>WAL/call</th><th>Exec share</th><th>Evidence</th>
+          </tr></thead>
+          <tbody id="changes-pgss-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>pg_settings changes</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Setting</th><th>Before</th><th>After</th><th>Source</th><th>Pending restart</th><th>First observed</th>
+          </tr></thead>
+          <tbody id="changes-settings-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+
+    <div class="diagnostic-section">
+      <h3>Autovacuum / Table Health changes</h3>
+      <p class="hint">DML rates и maintenance cycles считаются только по safe counter intervals; dead tuples, trigger usage и size — snapshot state.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Relation</th><th>State</th><th>I / U / D per hour</th><th>HOT</th><th>Dead tuples</th>
+            <th>Dead trigger</th><th>VAC / ANALYZE cycles</th><th>Size</th><th>Policy</th><th>Evidence</th>
+          </tr></thead>
+          <tbody id="changes-autovacuum-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>XID / Freeze context changes</h3>
+      <p class="hint">XID — safety context: age может расти между VACUUM cycles и затем уменьшаться при продвижении freeze horizon.</p>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Relation</th><th>State</th><th>XID age</th><th>% freeze max</th><th>Period age Δ</th>
+            <th>Effective freeze max</th><th>Policy source</th><th>Evidence</th>
+          </tr></thead>
+          <tbody id="changes-xid-list"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>I/O &amp; WAL period evidence</h3>
+      <p class="hint">Rates считаются только по source-specific safe intervals: pg_stat_database, pg_stat_wal и checkpoint statistics имеют независимые reset semantics. Query-level temp/WAL evidence остаётся в PGSS statement changes выше.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Metric</th><th>Baseline</th><th>Incident</th></tr></thead>
+        <tbody id="changes-storage-metrics"></tbody>
+      </table></div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>Relation size changes</h3>
+      <p class="hint">Observed storage deltas. Sample bounded; отсутствие relation в одном sample не доказывает CREATE/DROP.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Relation</th><th>State</th><th>Total before</th><th>Total after</th><th>Δ total</th><th>Δ heap</th><th>Δ indexes</th><th>Δ TOAST</th><th>Evidence</th></tr></thead>
+        <tbody id="changes-size-list"></tbody>
+      </table></div>
+    </div>
+
+    <div class="diagnostic-section">
+      <h3>Index Health context</h3>
+      <p class="hint">Classification changes и cumulative scan/DML deltas при непрерывном stats period. Predicate, workload/HOT и analyze context доступны в Index Health diagnostic. Это investigation evidence, не DROP advice.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Relation</th><th>Index</th><th>State</th><th>Classifications</th><th>Scan Δ</th><th>Relation DML Δ</th><th>Size Δ</th><th>Evidence</th></tr></thead>
+        <tbody id="changes-index-list"></tbody>
+      </table></div>
+    </div>
+
+    <details class="comparison-limitations" id="changes-limitations-details">
+      <summary>Data quality и ограничения</summary>
+      <div class="changes-limitations-grid">
+        <div><strong>PGSS baseline</strong><ul id="changes-pgss-baseline-limitations"></ul></div>
+        <div><strong>PGSS incident</strong><ul id="changes-pgss-incident-limitations"></ul></div>
+        <div><strong>Autovacuum</strong><ul id="changes-autovacuum-limitations"></ul></div>
+        <div><strong>XID</strong><ul id="changes-xid-limitations"></ul></div>
+        <div><strong>I/O &amp; WAL</strong><ul id="changes-storage-limitations"></ul></div>
+        <div><strong>Index Health</strong><ul id="changes-index-limitations"></ul></div>
+        <div><strong>Общие</strong><ul id="changes-limitations"></ul></div>
+      </div>
+    </details>
+  </div>
+</div>

@@ -1,0 +1,37 @@
+/* Vue Preview-only presets. The legacy ui/styles/tokens.css is unchanged. */
+:root, :root[data-theme="dba"] {
+  color-scheme: dark;
+  --focus-ring: #6ee7cf;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg:#10151b; --surface:#1a222c; --surface-2:#141c25; --surface-3:#0c1118;
+  --border:#313d49; --border-strong:#566778; --border-soft:#384654; --border-emphasis:#58738d;
+  --text:#eef3fa; --text-strong:#ffffff; --text-secondary:#d0dbe8;
+  --text-soft:#c8d5e2; --muted:#9eafbf; --muted-2:#7f91a2; --code-text:#e1edff;
+  --accent:#82b7ff; --accent-contrast:#0a1a31; --secondary:#283847;
+  --success:#76dbbc; --success-border:#2f7161; --success-bg:#112921; --message:#b1d4f7;
+  --danger:#743d4b; --danger-text:#ffe5ed;
+  --error:#ffb6bc; --error-strong:#ff919e; --error-focus:#e47183;
+  --error-border:#84505a; --error-bg:#301b23;
+  --focus-ring:#a6caff;
+}
+:root[data-theme="ubuntu"] {
+  color-scheme: dark;
+  --bg:#211a29; --surface:#302337; --surface-2:#281d30; --surface-3:#191420;
+  --border:#55425c; --border-strong:#80678a; --border-soft:#634e6a; --border-emphasis:#9d7fac;
+  --text:#f5eef7; --text-strong:#fff9ff; --text-secondary:#e1d4e6;
+  --text-soft:#dccddd; --muted:#bcaac3; --muted-2:#9e8aa8; --code-text:#f0e6f0;
+  --accent:#e9a052; --accent-contrast:#281622; --secondary:#48354f;
+  --success:#9fe2b7; --success-border:#497964; --success-bg:#1d3129; --message:#f0c79a;
+  --danger:#8b4358; --danger-text:#ffe5eb;
+  --error:#ffc2c8; --error-strong:#ff97a9; --error-focus:#ef849b;
+  --error-border:#8b5365; --error-bg:#3b202e;
+  --focus-ring:#c5b2f2;
+}
+:root[data-theme="light"] {
+  --focus-ring:#176b82;
+}
+@media (prefers-reduced-motion:reduce) {
+  *, *::before, *::after { scroll-behavior:auto; }
+}

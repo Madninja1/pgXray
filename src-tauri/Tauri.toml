@@ -1,0 +1,41 @@
+productName = "pgXray"
+version = "0.5.6"
+identifier = "dev.pgxray.desktop"
+[build]
+# Vue is the primary UI for both development and packaged builds.
+frontendDist = "../ui-vue/build"
+devUrl = "http://127.0.0.1:5173"
+beforeDevCommand = "npm run dev"
+beforeBuildCommand = "npm run build"
+[app]
+withGlobalTauri = true
+[[app.windows]]
+label = "main"
+title = "pgXray — PostgreSQL workspace"
+width = 1000
+height = 780
+minWidth = 680
+minHeight = 600
+[app.security]
+csp = "default-src 'self'; script-src 'self'; style-src 'self'; connect-src ipc: http://ipc.localhost; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"
+# Vite HMR is permitted only in development, never in the packaged app.
+devCsp = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost http://127.0.0.1:5173 ws://127.0.0.1:5173; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"
+[bundle]
+active = true
+category = "DeveloperTool"
+shortDescription = "PostgreSQL diagnostics and analysis"
+longDescription = "Local desktop toolkit for investigating PostgreSQL health, performance and diagnostic history."
+publisher = "pgXray contributors"
+icon = [
+  "icons/32x32.png",
+  "icons/128x128.png",
+  "icons/128x128@2x.png",
+  "icons/icon.png"
+]
+
+[bundle.linux.deb]
+desktopTemplate = "pgxray.desktop.hbs"
+
+[bundle.linux.deb.files]
+"/usr/share/doc/pg-xray/LICENSE" = "../LICENSE"
+"/usr/share/doc/pg-xray/THIRD_PARTY_NOTICES.md" = "../docs/THIRD_PARTY_NOTICES.md"

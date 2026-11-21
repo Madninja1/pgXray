@@ -1,0 +1,649 @@
+<div class="view-panel" hidden id="tools-view">
+    <div class="section-layout">
+        <aside aria-label="Инструменты pgXray" class="subnav">
+            <button class="subnav-item active" data-tools-tab="cases" type="button">Разборы</button>
+            <button class="subnav-item" data-tools-tab="privacy" type="button">Анонимизация</button>
+            <button class="subnav-item" data-tools-tab="pev2" type="button">Планы</button>
+        </aside>
+
+        <div class="section-content">
+            <div id="tools-cases-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Разборы</h2>
+                        <p class="hint">
+                            Case — рабочий контейнер одного расследования.
+                            В нём собираются SQL, EXPLAIN, результаты psql, статистика и заметки.
+                            Privacy scope задаёт общий mapping. Роль описывает сам artifact,
+                            а baseline/candidate сохраняются внутри конкретного comparison.
+                        </p>
+                    </div>
+                </div>
+
+                <details class="case-workflow-help">
+                    <summary>Как устроен разбор</summary>
+
+                    <div class="case-workflow-help-grid">
+                        <article>
+                            <strong>1. Case</strong>
+                            <span>
+                                Отдельное расследование конкретной проблемы или объекта.
+                                Case связан с PostgreSQL connection и privacy scope.
+                            </span>
+                        </article>
+
+                        <article>
+                            <strong>2. Inbox</strong>
+                            <span>
+                                Рабочая папка case. Результаты из psql можно сохранять
+                                туда через \o и затем зарегистрировать как artifacts.
+                            </span>
+                        </article>
+
+                        <article>
+                            <strong>3. Artifacts</strong>
+                            <span>
+                                SQL, EXPLAIN JSON, статистика, вывод команд и заметки,
+                                которые нужны для анализа проблемы.
+                            </span>
+                        </article>
+
+                        <article>
+                            <strong>4. Roles</strong>
+                            <span>
+                                Роль описывает назначение самого artifact: query, plan,
+                                DDL/schema, reference, note и другие.
+                            </span>
+                        </article>
+                    </div>
+                </details>
+
+                <div class="case-toolbar subpanel">
+                    <label>
+                        Подключение
+                        <select id="case-connection"></select>
+                    </label>
+                    <button class="secondary" id="refresh-cases" type="button">Обновить</button>
+                    <button
+                        aria-controls="case-list-panel"
+                        aria-expanded="true"
+                        class="secondary"
+                        id="toggle-case-sidebar"
+                        type="button"
+                    >
+                        Скрыть cases
+                    </button>
+                </div>
+
+                <div class="case-layout" id="case-layout">
+                    <div class="diagnostic-section" id="case-list-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h3>Cases</h3>
+                                <p class="hint">Выберите существующий разбор или создайте новый.</p>
+                            </div>
+                        </div>
+
+                        <form id="case-create-form" novalidate>
+                            <label>
+                                Название
+                                <input id="case-title-input" maxlength="200" name="title" placeholder="slow-report-2026-09-12">
+                                <small class="field-error" id="case-title-error" hidden></small>
+                            </label>
+
+                            <label>
+                                Описание
+                                <textarea
+                                    id="case-description-input"
+                                    maxlength="8000"
+                                    name="description"
+                                    placeholder="Что расследуем, симптомы, исходные данные и цель разбора"
+                                    rows="4"
+                                ></textarea>
+                            </label>
+
+                            <label>
+                                Privacy scope
+                                <select id="case-scope" name="scope_id"></select>
+                            </label>
+
+                            <button>Создать case</button>
+                        </form>
+
+                        <div class="inline-status" id="case-create-status" hidden></div>
+                        <div class="case-list" id="case-list"></div>
+                    </div>
+
+                    <div class="diagnostic-section" id="case-detail">
+                        <div class="empty-state" id="case-empty">Выберите case слева.</div>
+
+                        <div hidden id="case-content">
+                            <div class="panel-heading case-detail-heading">
+                                <div>
+                                    <h3 id="case-title"></h3>
+                                    <p class="hint" id="case-meta"></p>
+                                </div>
+
+                                <div class="case-heading-actions">
+                                    <button id="case-open-terminal" type="button">Открыть psql в case</button>
+                                    <button class="danger" id="case-delete" type="button">Удалить case</button>
+                                </div>
+                            </div>
+
+                            <div class="inline-status" id="case-detail-status" hidden></div>
+
+                            <details class="case-description-card subpanel" id="case-description-details">
+                                <summary>Описание case</summary>
+
+                                <p class="case-description-preview" id="case-description-preview"></p>
+
+                                <button
+                                    class="secondary"
+                                    id="case-description-edit"
+                                    type="button"
+                                >
+                                    Редактировать описание
+                                </button>
+
+                                <div id="case-description-editor">
+                                    <label>
+                                        Описание
+                                        <textarea
+                                            id="case-description"
+                                            maxlength="8000"
+                                            placeholder="Что расследуем, симптомы, исходные данные и цель разбора"
+                                            rows="5"
+                                        ></textarea>
+                                    </label>
+
+                                    <div class="form-actions">
+                                        <button
+                                            class="secondary"
+                                            id="case-description-save"
+                                            type="button"
+                                        >
+                                            Сохранить описание
+                                        </button>
+                                        <button
+                                            class="secondary"
+                                            id="case-description-cancel"
+                                            type="button"
+                                        >
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </div>
+                            </details>
+
+                            <div class="case-investigation-grid">
+                                <details class="subpanel case-investigation-panel">
+                                    <summary class="panel-heading compact-heading">
+                                        <div>
+                                            <h4>Timeline <span class="case-section-count" id="case-timeline-count">0</span></h4>
+                                            <p class="hint">
+                                                Evidence, What Changed events, interventions и before/after verification в одной временной линии.
+                                            </p>
+                                        </div>
+                                    </summary>
+                                    <div class="case-timeline" id="case-timeline"></div>
+                                </details>
+
+                                <details class="subpanel case-investigation-panel">
+                                    <summary class="panel-heading compact-heading">
+                                        <div>
+                                            <h4>Intervention <span class="case-section-count" id="case-intervention-count">0</span></h4>
+                                            <p class="hint">Отметьте изменение, эффект которого нужно проверить.</p>
+                                        </div>
+                                    </summary>
+
+                                    <form class="case-intervention-form" id="case-intervention-form">
+                                        <label>
+                                            Время
+                                            <input id="case-intervention-time" type="datetime-local">
+                                        </label>
+                                        <label>
+                                            Тип
+                                            <select id="case-intervention-kind">
+                                                <option value="deploy">Deploy</option>
+                                                <option value="config_change">Config change</option>
+                                                <option value="index_create">Created index</option>
+                                                <option value="index_drop">Dropped index</option>
+                                                <option value="query_change">Query rewrite</option>
+                                                <option value="vacuum">VACUUM</option>
+                                                <option value="maintenance">Maintenance</option>
+                                                <option value="other">Other</option>
+                                            </select>
+                                        </label>
+                                        <label class="case-intervention-title-field">
+                                            Что изменили
+                                            <input id="case-intervention-title" maxlength="200" placeholder="Deploy backend v2.7">
+                                        </label>
+                                        <label class="case-intervention-note-field">
+                                            Контекст
+                                            <textarea id="case-intervention-note" maxlength="8000" rows="2" placeholder="Краткое описание изменения или гипотезы"></textarea>
+                                        </label>
+                                        <div class="form-actions">
+                                            <button type="submit">Добавить intervention</button>
+                                        </div>
+                                    </form>
+                                    <div class="inline-status" id="case-intervention-status" hidden></div>
+                                </details>
+
+                                <details class="subpanel case-investigation-panel">
+                                    <summary class="panel-heading compact-heading">
+                                        <div>
+                                            <h4>Change Impact <span class="case-section-count" id="case-impact-count">0</span></h4>
+                                            <p class="hint">
+                                                Сравнение before/after использует тот же evidence-aware What Changed engine. Корреляция не выдаётся за причинность.
+                                            </p>
+                                        </div>
+                                    </summary>
+
+                                    <div class="case-impact-form">
+                                        <label>
+                                            Intervention
+                                            <select id="case-impact-intervention"></select>
+                                        </label>
+                                        <label>Before from<input id="case-impact-before-from" type="datetime-local"></label>
+                                        <label>Before to<input id="case-impact-before-to" type="datetime-local"></label>
+                                        <label>After from<input id="case-impact-after-from" type="datetime-local"></label>
+                                        <label>After to<input id="case-impact-after-to" type="datetime-local"></label>
+                                        <div class="form-actions">
+                                            <button id="case-impact-save" type="button">Сравнить и сохранить</button>
+                                        </div>
+                                    </div>
+                                    <div class="inline-status" id="case-impact-status" hidden></div>
+                                    <div class="case-impact-list" id="case-impact-list"></div>
+                                </details>
+
+                                <details class="subpanel case-investigation-panel">
+                                    <summary class="panel-heading compact-heading">
+                                        <div>
+                                            <h4>Similar incidents <span class="case-section-count" id="case-similar-count">0</span></h4>
+                                            <p class="hint">
+                                                Детерминированные совпадения fingerprint. Совпадение признаков не доказывает одинаковую root cause.
+                                            </p>
+                                        </div>
+                                    </summary>
+                                    <div class="case-fingerprint" id="case-fingerprint"></div>
+                                    <div class="case-similar-incidents" id="case-similar-incidents"></div>
+                                </details>
+                            </div>
+
+                            <div class="workspace-path-card">
+                                <strong>Case inbox</strong>
+                                <code id="case-inbox-path"></code>
+                                <p class="hint">
+                                    Это рабочая папка текущего case.
+                                    Чтобы сохранить результат из psql:
+                                    <code>\o j.json</code>
+                                    → выполните запрос →
+                                    <code>\o</code>
+                                    → нажмите «Обновить inbox».
+                                </p>
+                            </div>
+
+                            <div class="case-import subpanel">
+                                <label>
+                                    Импортировать локальный файл
+                                    <input id="case-import-path" placeholder="/tmp/j.json">
+                                </label>
+
+                                <label>
+                                    Тип
+                                    <select id="case-import-kind">
+                                        <option value="explain">EXPLAIN</option>
+                                        <option value="sql">SQL</option>
+                                        <option value="text">Text / note</option>
+                                        <option value="import">Other</option>
+                                    </select>
+                                </label>
+
+                                <div class="form-actions">
+                                    <button id="case-import-file" type="button">Импортировать</button>
+                                    <button class="secondary" id="case-scan-inbox" type="button">Обновить inbox</button>
+                                </div>
+                            </div>
+
+                            <div class="case-file-editor subpanel" id="case-file-editor" hidden>
+                                <div class="panel-heading compact-heading">
+                                    <div>
+                                        <h4 id="case-file-editor-title">Новый файл</h4>
+                                        <p class="hint">
+                                            Встроенный редактор работает с локальными source artifacts до 2 MB.
+                                            Inbox, share и generated artifacts остаются read-only.
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="case-file-editor-meta">
+                                    <label>
+                                        Имя файла
+                                        <input id="case-file-name" maxlength="200" placeholder="query.sql">
+                                    </label>
+
+                                    <label>
+                                        Тип
+                                        <select id="case-file-kind">
+                                            <option value="sql">SQL</option>
+                                            <option value="explain">EXPLAIN</option>
+                                            <option value="text">Text / note</option>
+                                            <option value="source">Other</option>
+                                            <option value="import">Imported text</option>
+                                        </select>
+                                    </label>
+                                </div>
+
+                                <label>
+                                    Содержимое
+                                    <textarea id="case-file-content" rows="16" spellcheck="false"></textarea>
+                                </label>
+
+                                <div class="form-actions">
+                                    <button id="case-file-save" type="button">Создать файл</button>
+                                    <button class="secondary" id="case-file-cancel" type="button">Отмена</button>
+                                </div>
+                            </div>
+
+                            <div class="panel-heading artifact-heading">
+                                <div>
+                                    <h3>Artifacts</h3>
+                                    <p class="hint">
+                                        Для SQL назначайте Query или DDL/schema, для EXPLAIN — Execution plan.
+                                        Baseline/Candidate выбираются в конкретном сравнении и не меняют роль artifact.
+                                        Shareable-файлы имеют lineage; artifacts, изменённые после comparison, помечаются STALE в истории.
+                                    </p>
+                                </div>
+                                <button class="secondary" id="case-new-file" type="button">Новый файл</button>
+                            </div>
+
+                            <details class="artifact-role-reference">
+                                <summary>Для чего нужны роли artifacts</summary>
+                                <div class="artifact-role-reference-grid">
+                                    <p><strong>SQL query</strong><span>Запрос или его вариант. Сторона baseline/candidate задаётся comparison.</span></p>
+                                    <p><strong>Execution plan</strong><span>EXPLAIN / EXPLAIN ANALYZE, который может участвовать в разных comparisons.</span></p>
+                                    <p><strong>DDL / schema</strong><span>Определения VIEW, функций, индексов и других объектов.</span></p>
+                                    <p><strong>Reference</strong><span>Настройки, статистика и вспомогательный технический контекст.</span></p>
+                                    <p><strong>Note</strong><span>Локальные заметки по расследованию.</span></p>
+                                    <p><strong>Comparison</strong><span>Отдельная запись связывает artifacts как baseline/candidate и сохраняет историю экспериментов.</span></p>
+                                </div>
+                            </details>
+
+                            <div class="case-artifact-browser" id="case-artifact-browser">
+                                <div class="case-artifact-list" id="case-artifact-list"></div>
+
+                                <section class="case-artifact-viewer subpanel" id="case-artifact-viewer" hidden>
+                                    <div class="case-artifact-viewer-heading">
+                                        <div>
+                                            <h4 id="case-artifact-viewer-title">Artifact</h4>
+                                            <p class="hint" id="case-artifact-viewer-meta"></p>
+                                        </div>
+                                        <button class="secondary" id="case-artifact-viewer-close" type="button">Закрыть</button>
+                                    </div>
+                                    <pre class="case-artifact-preview" id="case-artifact-preview"></pre>
+                                    <div class="case-artifact-viewer-actions" id="case-artifact-viewer-actions"></div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div hidden id="tools-privacy-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Анонимизация</h2>
+                        <p class="hint">
+                            Один mapping используется для всего privacy scope.
+                            mapping.json содержит реальные соответствия и никогда не должен передаваться наружу.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="privacy-toolbar subpanel">
+                    <label>
+                        Подключение / scope
+                        <select id="privacy-connection"></select>
+                    </label>
+
+                    <label>
+                        Privacy scope
+                        <select id="privacy-scope"></select>
+                    </label>
+
+                </div>
+
+                <form class="privacy-scope-create subpanel" id="privacy-scope-create-form" novalidate>
+                    <label>
+                        Новый scope
+                        <input id="privacy-new-scope-name" maxlength="200" placeholder="incident-payments">
+                        <small class="field-error" id="privacy-new-scope-error" hidden></small>
+                    </label>
+
+                    <label>
+                        Привязка
+                        <select id="privacy-new-scope-type">
+                            <option value="connection">Текущее подключение</option>
+                            <option value="project">Project / общий</option>
+                        </select>
+                    </label>
+
+                    <button id="privacy-create-scope" type="submit">Создать scope</button>
+                </form>
+
+                <div class="inline-status" id="privacy-scope-status" hidden></div>
+
+                <div class="privacy-result-policy subpanel" id="privacy-result-policy" hidden>
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Diagnostic result policy</h3>
+                            <p class="hint">
+                                Настройка хранится в выбранном privacy scope и применяется только к режиму Diagnostic result.
+                                Field overrides работают одинаково для JSON, обычной psql-таблицы и \gx.
+                                Для каждого поля можно выбрать обычное действие или раскрыть вложенную структуру: JSON cell,
+                                exact/regex поля, динамические значения и отдельную политику для object keys.
+                            </p>
+                        </div>
+                        <button id="privacy-result-policy-save" type="button">Сохранить policy</button>
+                    </div>
+
+                    <div class="privacy-result-policy-grid">
+                        <label>
+                            По умолчанию
+                            <select id="privacy-result-default">
+                                <option value="auto">Auto — текущая безопасная эвристика</option>
+                                <option value="preserve">Preserve — оставить значения как есть</option>
+                            </select>
+                        </label>
+
+                        <div class="privacy-result-rules">
+                            <div class="privacy-result-rules-heading">
+                                <strong>Field overrides</strong>
+                                <button class="secondary" id="privacy-result-add-rule" type="button">Добавить поле</button>
+                            </div>
+                            <div id="privacy-result-rule-list"></div>
+                        </div>
+                    </div>
+
+                    <p class="hint">
+                        При <strong>Preserve</strong> наружу уйдут все поля, кроме явно добавленных overrides.
+                        Для JSON/JSONB значения из psql включите «Значение — JSON строка»: ключи сохраняются по умолчанию,
+                        а внутри можно анонимизировать только нужные поля. Regex применяется к имени поля, а не к сырому JSON.
+                    </p>
+                    <div class="inline-status" id="privacy-result-policy-status" hidden></div>
+                </div>
+
+                <div class="privacy-editor-grid">
+                    <label>
+                        Исходные данные
+                        <textarea id="privacy-input" placeholder="Вставьте текст, SQL, EXPLAIN FORMAT JSON, diagnostic JSON, обычную psql-таблицу или expanded output из \gx" rows="24" spellcheck="false"></textarea>
+                    </label>
+
+                    <label>
+                        Результат
+                        <textarea id="privacy-output" readonly rows="24" spellcheck="false"></textarea>
+                    </label>
+                </div>
+
+                <div class="privacy-actions">
+                    <div class="privacy-output-actions">
+                        <button class="secondary" id="privacy-copy-output" type="button">Копировать результат</button>
+                    </div>
+
+                    <div class="privacy-action-card subpanel">
+                        <label>
+                            Режим анонимизации
+                            <select id="privacy-anonymize-mode">
+                                <option value="text">Text</option>
+                                <option value="sql">SQL</option>
+                                <option value="explain">EXPLAIN JSON</option>
+                                <option value="result">Diagnostic result (JSON / psql / \gx)</option>
+                            </select>
+                        </label>
+                        <button id="privacy-anonymize" type="button">Анонимизировать →</button>
+                    </div>
+
+                    <div class="privacy-action-card subpanel">
+                        <label>
+                            Режим деанонимизации
+                            <select id="privacy-deanonymize-mode">
+                                <option value="text">Text</option>
+                                <option value="sql">SQL</option>
+                                <option value="explain">EXPLAIN JSON</option>
+                                <option value="result">Diagnostic result (JSON / psql / \gx)</option>
+                            </select>
+                        </label>
+                        <button class="secondary" id="privacy-deanonymize" type="button">← Деанонимизировать</button>
+                    </div>
+                </div>
+
+                <div class="inline-status" hidden id="privacy-transform-status"></div>
+                <div class="inline-status" hidden id="privacy-warning"></div>
+
+                <div class="diagnostic-section privacy-mapping">
+                    <div class="panel-heading">
+                        <div>
+                            <h3>Mapping</h3>
+                            <p class="hint" id="privacy-mapping-path"></p>
+                        </div>
+
+                        <div class="privacy-mapping-actions">
+                            <button class="secondary" id="privacy-reset-mapping" type="button">Очистить mapping</button>
+                            <button class="danger" id="privacy-delete-scope" type="button">Удалить scope</button>
+                        </div>
+                    </div>
+
+                    <div class="autovacuum-summary privacy-mapping-summary">
+                        <article class="metric-card"><span>Identifiers</span><strong id="privacy-count-identifiers">0</strong></article>
+                        <article class="metric-card"><span>Strings</span><strong id="privacy-count-strings">0</strong></article>
+                        <article class="metric-card"><span>Integers</span><strong id="privacy-count-integers">0</strong></article>
+                        <article class="metric-card"><span>Floats</span><strong id="privacy-count-floats">0</strong></article>
+                        <article class="metric-card"><span>Bitstrings</span><strong id="privacy-count-bitstrings">0</strong></article>
+                        <article class="metric-card"><span>Redactions</span><strong id="privacy-count-redactions">0</strong></article>
+                    </div>
+
+                    <div class="privacy-mapping-manager">
+                        <div class="privacy-mapping-filterbar">
+                            <label>
+                                Поиск по original / alias
+                                <input id="privacy-mapping-search" type="search" placeholder="orders / table_001 / customer_id…" autocomplete="off">
+                            </label>
+
+                            <label>
+                                Категория
+                                <select id="privacy-mapping-category">
+                                    <option value="all">Все</option>
+                                    <option value="identifier">Identifier</option>
+                                    <option value="string">String</option>
+                                    <option value="integer">Integer</option>
+                                    <option value="float">Float</option>
+                                    <option value="bitstring">Bitstring</option>
+                                    <option value="redaction">Redaction</option>
+                                </select>
+                            </label>
+
+                            <button class="secondary" id="privacy-mapping-refresh" type="button">Обновить</button>
+                        </div>
+
+                        <div class="privacy-mapping-selection">
+                            <label class="privacy-mapping-select-all">
+                                <input id="privacy-mapping-select-all" type="checkbox">
+                                Выбрать видимые
+                            </label>
+
+                            <span class="hint" id="privacy-mapping-result-count">Показано: 0</span>
+                            <span class="hint" id="privacy-mapping-selected-count">Выбрано: 0</span>
+
+                            <button class="danger" id="privacy-mapping-delete-selected" type="button" disabled>
+                                Удалить выбранные
+                            </button>
+                        </div>
+
+                        <div class="table-wrap privacy-mapping-table-wrap">
+                            <table class="privacy-mapping-table">
+                                <thead>
+                                <tr>
+                                    <th></th>
+                                    <th>Категория</th>
+                                    <th>Kind</th>
+                                    <th>Original</th>
+                                    <th>Alias</th>
+                                    <th>Действия</th>
+                                </tr>
+                                </thead>
+                                <tbody id="privacy-mapping-entry-list"></tbody>
+                            </table>
+                        </div>
+
+                        <p class="hint">
+                            Поиск читает текущий mapping.json этого scope. Показывается до 500 совпадений.
+                            Удаление выполняется одним batch и один раз увеличивает mapping revision.
+                        </p>
+                    </div>
+
+                    <p class="hint privacy-danger-hint">
+                        Очистка mapping необратимо разрывает связь со всеми уже анонимизированными
+                        материалами этого scope. Default scope подключения удалить нельзя — его можно только очистить.
+                    </p>
+                </div>
+            </div>
+
+            <div hidden id="tools-pev2-panel">
+                <div class="panel-heading">
+                    <div>
+                        <h2>Планы запросов</h2>
+                        <p class="hint">
+                            План открывается в отдельном полноразмерном Plan Workspace.
+                            Локальный PEV2 получает исходный EXPLAIN с реальными именами.
+                            Shareable anonymized artifact создаётся только по явной команде внутри Plan Workspace.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="plan-launcher-card">
+                    <div class="pev2-toolbar subpanel">
+                        <label>
+                            Case
+                            <select id="pev2-case"></select>
+                        </label>
+
+                        <label>
+                            EXPLAIN artifact
+                            <select id="pev2-artifact"></select>
+                        </label>
+
+                        <button id="pev2-open" type="button">Открыть Plan Workspace</button>
+                    </div>
+
+                    <div class="inline-status" hidden id="pev2-status"></div>
+
+                    <div class="plan-launcher-info">
+                        <article><strong>Локальный анализ</strong><span>Real plan + PEV2 + Rust Analyzer + справочник.</span></article>
+                        <article><strong>Share</strong><span>Anonymized JSON создаётся отдельно, с lineage к исходному artifact.</span></article>
+                        <article><strong>Compare</strong><span>Baseline/Candidate plans и SQL можно сравнить в отдельном окне.</span></article>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

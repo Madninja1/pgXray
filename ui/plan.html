@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>pgXray · Plan Workspace</title>
+
+  <link rel="stylesheet" href="vendor/pev2/bootstrap.min.css">
+  <link rel="stylesheet" href="vendor/pev2/pev2.css">
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/plan.css">
+
+  <script>
+    (() => {
+      try {
+        const theme = localStorage.getItem("pgxray.theme") || "graphite-teal";
+        document.documentElement.dataset.theme = theme;
+      } catch (_) {
+        document.documentElement.dataset.theme = "graphite-teal";
+      }
+    })();
+  </script>
+
+  <script src="vendor/pev2/vue.global.prod.js" defer></script>
+  <script src="vendor/pev2/pev2.umd.js" defer></script>
+  <script src="js/invoke.js" defer></script>
+  <script src="js/plan.js" defer></script>
+</head>
+<body>
+<div class="plan-shell">
+  <header class="plan-topbar">
+    <div class="plan-identity">
+      <strong id="plan-title">Plan Workspace</strong>
+      <span id="plan-meta">Загрузка…</span>
+    </div>
+
+    <div class="plan-top-actions">
+      <span class="plan-badge local">LOCAL REAL</span>
+
+      <button class="plan-button secondary" id="plan-refresh" type="button">
+        Обновить
+      </button>
+
+      <button class="plan-button secondary" id="plan-mapping-toggle" type="button">
+        Mapping <span id="plan-mapping-count">—</span>
+      </button>
+
+      <button class="plan-button" id="plan-prepare-share" type="button">
+        Подготовить share
+      </button>
+
+      <button class="plan-button secondary" id="plan-copy-share" type="button" disabled>
+        Копировать anonymized JSON
+      </button>
+
+      <button class="plan-button secondary" id="plan-export-share" type="button" disabled>
+        Экспорт share
+      </button>
+
+      <button class="plan-button secondary" id="plan-reveal-share" type="button" disabled>
+        Папка
+      </button>
+    </div>
+  </header>
+
+  <div class="plan-status" id="plan-status" role="status"></div>
+
+  <nav class="plan-tabs" aria-label="Plan Workspace">
+    <button class="plan-tab active" data-plan-tab="visual" type="button">Visual</button>
+    <button class="plan-tab" data-plan-tab="analysis" type="button">Анализ</button>
+    <button class="plan-tab" data-plan-tab="compare" type="button">Сравнение</button>
+    <button class="plan-tab" data-plan-tab="raw" type="button">Raw</button>
+    <button class="plan-tab" data-plan-tab="reference" type="button">Справочник</button>
+  </nav>
+
+  <main class="plan-main">
+    <section class="plan-panel plan-panel-visual" id="plan-panel-visual">
+      <div id="plan-pev2-root" class="plan-pev2-root">
+        <div class="plan-loading">Загрузка PEV2…</div>
+      </div>
+    </section>
+
+    <section class="plan-panel scroll-panel" id="plan-panel-analysis" hidden>
+      <div class="plan-content">
+        <div class="plan-section-heading">
+          <div>
+            <h1>Rust Plan Analyzer</h1>
+            <p>
+              Findings — эвристические сигналы, а не автоматические рецепты.
+              Время узла × loops используется только как индикатор повторной работы, не как wall-clock.
+            </p>
+          </div>
+
+          <button class="plan-button secondary" id="analysis-copy-ai" type="button">
+            Копировать для AI
+          </button>
+        </div>
+
+        <div class="summary-grid" id="analysis-summary"></div>
+
+        <section class="plan-card">
+          <h2>Hotspots</h2>
+          <div class="plan-table-wrap">
+            <table class="plan-table">
+              <thead>
+              <tr>
+                <th>Node</th>
+                <th>Repeated time</th>
+                <th>Rows total</th>
+                <th>Loops</th>
+                <th>Shared read</th>
+                <th>Temp written</th>
+              </tr>
+              </thead>
+              <tbody id="analysis-hotspots"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="plan-card">
+          <div class="plan-card-heading">
+            <h2>Findings</h2>
+            <div class="finding-filters" id="finding-filters">
+              <button class="chip active" data-finding-filter="all" type="button">Все</button>
+              <button class="chip" data-finding-filter="high" type="button">High</button>
+              <button class="chip" data-finding-filter="warning" type="button">Warning</button>
+              <button class="chip" data-finding-filter="info" type="button">Info</button>
+            </div>
+          </div>
+          <div class="finding-list" id="analysis-findings"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="plan-panel scroll-panel" id="plan-panel-compare" hidden>
+      <div class="plan-content">
+        <div class="plan-section-heading">
+          <div>
+            <h1>Baseline / Candidate</h1>
+            <p>
+              Baseline/Candidate относятся к конкретному сравнению, а не к artifact навсегда.
+              План можно сравнить без выполнения запроса. Проверка данных и EXPLAIN ANALYZE
+              реально выполняют SELECT и создают нагрузку на выбранное подключение.
+            </p>
+          </div>
+        </div>
+
+        <section class="plan-card">
+          <h2>История сравнений</h2>
+          <p>Каждая запись хранит конкретные baseline/candidate artifacts, SHA-256 snapshot и результат сравнения, если он был создан текущей версией pgXray. Изменённые или недоступные после этого artifacts помечаются STALE.</p>
+          <div id="compare-history"></div>
+        </section>
+
+        <section class="plan-card">
+          <h2>Сравнить сохранённые EXPLAIN</h2>
+
+          <div class="compare-select-grid">
+            <label>
+              Baseline plan
+              <select id="compare-plan-baseline"></select>
+            </label>
+            <label>
+              Candidate plan
+              <select id="compare-plan-candidate"></select>
+            </label>
+            <button class="plan-button" id="compare-plans-run" type="button">Сравнить планы</button>
+          </div>
+
+          <div id="compare-plan-result"></div>
+        </section>
+
+        <section class="plan-card">
+          <h2>Сравнить SQL на PostgreSQL</h2>
+
+          <div class="compare-select-grid">
+            <label>
+              Baseline SQL
+              <select id="compare-query-baseline"></select>
+            </label>
+            <label>
+              Candidate SQL
+              <select id="compare-query-candidate"></select>
+            </label>
+            <label>
+              Timeout
+              <select id="compare-timeout">
+                <option value="30000">30 секунд</option>
+                <option value="60000">1 минута</option>
+                <option value="120000">2 минуты</option>
+                <option value="300000" selected>5 минут</option>
+                <option value="600000">10 минут</option>
+                <option value="1800000">30 минут</option>
+                <option value="3600000">1 час</option>
+                <option value="7200000">2 часа</option>
+                <option value="14400000">4 часа</option>
+              </select>
+              <small>
+                Для EXPLAIN / EXPLAIN ANALYZE timeout применяется отдельно к каждому запросу;
+                для EXCEPT ALL — ко всему statement сравнения.
+              </small>
+            </label>
+          </div>
+
+          <div class="execution-warning">
+            <strong>Выполнение запросов.</strong>
+            <span>
+              `Сравнить данные` и `EXPLAIN ANALYZE` реально выполняют оба SELECT.
+              Парсер запрещает writable statements, а PostgreSQL session работает
+              `default_transaction_read_only=on`, но SELECT может вызывать пользовательские функции.
+            </span>
+          </div>
+
+          <label class="execution-confirm">
+            <input id="compare-execution-confirm" type="checkbox">
+            Я понимаю, что следующие действия выполнят запросы на выбранном PostgreSQL.
+          </label>
+
+          <div class="compare-actions">
+            <button class="plan-button secondary" id="compare-query-explain" type="button">
+              Сравнить EXPLAIN
+            </button>
+            <button class="plan-button" id="compare-query-results" type="button" disabled>
+              Сравнить данные · EXCEPT ALL
+            </button>
+            <button class="plan-button danger" id="compare-query-analyze" type="button" disabled>
+              EXPLAIN ANALYZE
+            </button>
+          </div>
+
+          <div class="compare-note">
+            `EXPLAIN` не выполняет SELECT. `EXCEPT ALL` сохраняет multiplicity и ловит различия
+            в дублях, если обе стороны имеют совместимый row shape.
+          </div>
+
+          <div id="compare-query-result"></div>
+        </section>
+      </div>
+    </section>
+
+    <section class="plan-panel scroll-panel" id="plan-panel-raw" hidden>
+      <div class="plan-content raw-content">
+        <div class="plan-card-heading">
+          <div>
+            <h1>Raw plan</h1>
+            <p>Локальный original и share-preview используют один и тот же privacy scope.</p>
+          </div>
+
+          <div class="raw-switch">
+            <button class="chip active" data-raw-view="local" type="button">Local real</button>
+            <button class="chip" data-raw-view="anonymous" type="button">Anonymous preview</button>
+            <button class="plan-button secondary" id="raw-copy" type="button">Копировать</button>
+          </div>
+        </div>
+
+        <pre class="raw-plan" id="raw-plan"></pre>
+      </div>
+    </section>
+
+    <section class="plan-panel scroll-panel" id="plan-panel-reference" hidden>
+      <div class="reference-layout">
+        <aside class="reference-index">
+          <input id="reference-search" type="search" placeholder="Nested Loop / buffers / JIT…">
+          <div id="reference-list"></div>
+        </aside>
+
+        <article class="reference-document" id="reference-document">
+          <div class="plan-loading">Загрузка справочника…</div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <aside class="mapping-drawer" id="mapping-drawer" hidden>
+    <div class="mapping-drawer-header">
+      <div>
+        <strong>Mapping этого privacy scope</strong>
+        <small>READ ONLY · управление и удаление: Tools → Анонимизация</small>
+      </div>
+      <button class="icon-button" id="mapping-close" type="button" aria-label="Закрыть">×</button>
+    </div>
+
+    <input id="mapping-filter" type="search" placeholder="orders / table_001 / customer_id…" autocomplete="off">
+    <div class="mapping-list" id="mapping-list"></div>
+    <p class="mapping-drawer-hint">Поиск идёт по текущему persisted mapping.json. Показывается до 500 совпадений.</p>
+  </aside>
+
+  <aside class="reference-drawer" id="reference-drawer" hidden>
+    <div class="mapping-drawer-header">
+      <div>
+        <strong>Что означает этот узел</strong>
+        <small>Справочник PostgreSQL plan nodes и metrics</small>
+      </div>
+      <button class="icon-button" id="reference-drawer-close" type="button" aria-label="Закрыть">×</button>
+    </div>
+    <div class="reference-drawer-body" id="reference-drawer-body"></div>
+  </aside>
+</div>
+</body>
+</html>

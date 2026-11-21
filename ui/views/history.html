@@ -1,0 +1,375 @@
+<div class="view-panel" hidden="" id="history-view">
+<div class="section-layout">
+<aside aria-label="История диагностики" class="subnav">
+<button class="subnav-item active" data-history-module="xid" type="button">
+            XID / Freeze
+          </button>
+<button class="subnav-item" data-history-module="pgss" type="button">
+            pg_stat_statements
+          </button>
+<button class="subnav-item" data-history-module="autovacuum" type="button">
+            Autovacuum
+          </button>
+</aside>
+<div class="section-content">
+<div id="xid-history-panel">
+<div class="panel-heading">
+<div>
+<h2>История XID / Freeze</h2>
+<p class="hint">
+                  Каждый успешный XID snapshot сохраняется локально.
+                  Сравнение выполняется только для одного PostgreSQL target.
+                </p>
+</div>
+</div>
+<div class="history-controls subpanel">
+<label>
+                Подключение
+                <select id="xid-history-connection"></select>
+</label>
+<button id="refresh-xid-history" type="button">
+                Обновить
+              </button>
+</div>
+<p class="empty-state" id="xid-history-empty">
+              Сохранённых XID snapshots для этого подключения пока нет.
+            </p>
+<div class="history-content" hidden="" id="xid-history-content">
+<details class="diagnostic-section history-snapshots-accordion" id="xid-saved-snapshots">
+<summary>Сохранённые snapshots</summary>
+<div class="history-snapshots-body">
+<div class="history-pager" data-xid-pager="history"></div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Время</th>
+<th>PostgreSQL target</th>
+<th>current xid8</th>
+<th>DB XID age</th>
+<th>Самая старая relation</th>
+<th>Недоступные секции</th>
+</tr>
+</thead>
+<tbody id="xid-history-list"></tbody>
+</table>
+</div>
+<div class="history-pager" data-xid-pager="history"></div>
+</div>
+</details>
+<div class="diagnostic-section">
+<h3>Сравнить snapshots</h3>
+<div class="comparison-controls">
+<label>
+                    Первый snapshot
+                    <select id="xid-compare-first"></select>
+</label>
+<label>
+                    Второй snapshot
+                    <select id="xid-compare-second"></select>
+</label>
+<button id="compare-xid" type="button">
+                    Сравнить
+                  </button>
+</div>
+<div aria-live="polite" class="inline-status error" hidden="" id="xid-comparison-error" role="status"></div>
+<div class="comparison-content" hidden="" id="xid-comparison-content">
+<div class="comparison-summary">
+<article class="metric-card">
+<span>Интервал</span>
+<strong id="xid-compare-interval">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ current xid8</span>
+<strong id="xid-compare-delta">—</strong>
+</article>
+<article class="metric-card">
+<span>XID / minute</span>
+<strong id="xid-compare-rate">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ DB XID age</span>
+<strong id="xid-compare-db-age">—</strong>
+</article>
+<article class="metric-card">
+<span>Configured headroom</span>
+<strong id="xid-compare-headroom">—</strong>
+</article>
+</div>
+<p class="hint" id="xid-compare-meta"></p>
+<div class="comparison-grid">
+<article class="comparison-card">
+<h4>Самая старая relation</h4>
+<div id="xid-compare-oldest-relation"></div>
+</article>
+<article class="comparison-card">
+<h4>XMIN blockers</h4>
+<div id="xid-compare-blockers"></div>
+</article>
+<article class="comparison-card">
+<h4>VACUUM между снимками</h4>
+<div id="xid-compare-vacuums"></div>
+</article>
+</div>
+<div class="diagnostic-section comparison-relations" id="xid-compare-relations-section">
+<h4>Relations в TOP samples</h4>
+<div class="history-pager" data-xid-pager="relations"></div>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>OID</th>
+<th>Relation</th>
+<th>Older age</th>
+<th>Newer age</th>
+<th>Δ age</th>
+<th>Older %</th>
+<th>Newer %</th>
+<th>Sample state</th>
+</tr>
+</thead>
+<tbody id="xid-compare-relation-list"></tbody>
+</table>
+</div>
+<div class="history-pager" data-xid-pager="relations"></div>
+</div>
+<details class="comparison-limitations">
+<summary>Ограничения сравнения</summary>
+<ul id="xid-compare-limitations"></ul>
+</details>
+</div>
+</div>
+</div>
+</div>
+<div hidden="" id="pgss-history-panel">
+<div class="panel-heading">
+<div>
+<h2>История pg_stat_statements</h2>
+<p class="hint">
+                  dealloc rate, изменение заполненности и cardinality между snapshots.
+                </p>
+</div>
+</div>
+<div class="history-controls subpanel">
+<label>
+                Подключение
+                <select id="pgss-history-connection"></select>
+</label>
+<button id="refresh-pgss-history" type="button">
+                Обновить
+              </button>
+</div>
+<p class="empty-state" id="pgss-history-empty">
+              Сохранённых PGSS snapshots для этого подключения пока нет.
+            </p>
+<div class="history-content" hidden="" id="pgss-history-content">
+<div class="diagnostic-section">
+<h3>Сохранённые snapshots</h3>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Время</th>
+<th>Target</th>
+<th>dealloc</th>
+<th>Entries</th>
+<th>Fill</th>
+<th>One-shot</th>
+<th>stats_reset</th>
+<th>Недоступные секции</th>
+</tr>
+</thead>
+<tbody id="pgss-history-list"></tbody>
+</table>
+</div>
+</div>
+<div class="diagnostic-section">
+<h3>Сравнить PGSS snapshots</h3>
+<div class="comparison-controls">
+<label>
+                    Первый snapshot
+                    <select id="pgss-compare-first"></select>
+</label>
+<label>
+                    Второй snapshot
+                    <select id="pgss-compare-second"></select>
+</label>
+<button id="compare-pgss" type="button">
+                    Сравнить
+                  </button>
+</div>
+<div class="inline-status error" hidden="" id="pgss-comparison-error"></div>
+<div class="comparison-content" hidden="" id="pgss-comparison-content">
+<div class="comparison-summary">
+<article class="metric-card">
+<span>Интервал</span>
+<strong id="pgss-compare-interval">—</strong>
+</article>
+<article class="metric-card">
+<span>stats_reset</span>
+<strong id="pgss-compare-stats-period">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ dealloc</span>
+<strong id="pgss-compare-dealloc">—</strong>
+</article>
+<article class="metric-card">
+<span>dealloc / hour</span>
+<strong id="pgss-compare-dealloc-rate">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ entries</span>
+<strong id="pgss-compare-entries">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ fill</span>
+<strong id="pgss-compare-fill">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ one-shot</span>
+<strong id="pgss-compare-one-call">—</strong>
+</article>
+<article class="metric-card">
+<span>Δ calls≤5</span>
+<strong id="pgss-compare-up-to-5">—</strong>
+</article>
+</div>
+<p class="hint" id="pgss-compare-meta"></p>
+<div class="diagnostic-section pgss-comparison-interpretation">
+<h4>Интерпретация интервала</h4>
+<p class="hint">
+                      dealloc delta и изменение cardinality читаются вместе.
+                    </p>
+<div class="interpretation-list" id="pgss-comparison-interpretation-list"></div>
+</div>
+<div class="diagnostic-section comparison-relations">
+<h4>Role / database changes</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Role / DB</th>
+<th>Older entries</th>
+<th>Newer entries</th>
+<th>Δ entries</th>
+<th>Older one-shot</th>
+<th>Newer one-shot</th>
+<th>Δ one-shot</th>
+<th>Sample state</th>
+</tr>
+</thead>
+<tbody id="pgss-compare-role-list"></tbody>
+</table>
+</div>
+</div>
+<div class="diagnostic-section comparison-relations">
+<h4>Command changes</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Role / DB</th>
+<th>Older entries</th>
+<th>Newer entries</th>
+<th>Δ entries</th>
+<th>Δ one-shot</th>
+<th>Sample state</th>
+</tr>
+</thead>
+<tbody id="pgss-compare-command-list"></tbody>
+</table>
+</div>
+</div>
+<div class="diagnostic-section comparison-relations">
+<h4>CALL target changes</h4>
+<div class="table-wrap">
+<table>
+<thead>
+<tr>
+<th>CALL tag</th>
+<th>Role / DB</th>
+<th>Older entries</th>
+<th>Newer entries</th>
+<th>Δ entries</th>
+<th>Δ one-shot</th>
+<th>Sample state</th>
+</tr>
+</thead>
+<tbody id="pgss-compare-call-list"></tbody>
+</table>
+</div>
+</div>
+<details class="comparison-limitations">
+<summary>Ограничения сравнения</summary>
+<ul id="pgss-compare-limitations"></ul>
+</details>
+</div>
+</div>
+</div>
+</div>
+<div hidden="" id="autovacuum-history-panel">
+<div class="panel-heading">
+<div>
+<h2>История Autovacuum / Table Health</h2>
+<p class="hint">DML deltas, maintenance cycles и изменение distance-to-trigger между snapshots.</p>
+</div>
+</div>
+<div class="history-controls subpanel">
+<label>Подключение<select id="autovacuum-history-connection"></select></label>
+<button id="refresh-autovacuum-history" type="button">Обновить</button>
+</div>
+<p class="empty-state" id="autovacuum-history-empty">Сохранённых Autovacuum snapshots для этого подключения пока нет.</p>
+<div class="history-content" hidden="" id="autovacuum-history-content">
+<div class="diagnostic-section" id="autovacuum-saved-snapshots">
+<h3>Сохранённые snapshots</h3>
+<div class="history-pager" data-autovacuum-pager="history"></div>
+<div class="table-wrap"><table>
+<thead><tr><th>ID</th><th>Время</th><th>Target</th><th>Tables</th><th>Total dead</th><th>Dead trigger</th><th>Insert trigger</th><th>Analyze trigger</th><th>Active V/A</th><th>stats_reset</th><th>Unavailable</th></tr></thead>
+<tbody id="autovacuum-history-list"></tbody>
+</table></div>
+<div class="history-pager" data-autovacuum-pager="history"></div>
+</div>
+<div class="diagnostic-section">
+<h3>Сравнить snapshots</h3>
+<div class="comparison-controls">
+<label>Первый snapshot<select id="autovacuum-compare-first"></select></label>
+<label>Второй snapshot<select id="autovacuum-compare-second"></select></label>
+<button id="compare-autovacuum" type="button">Сравнить</button>
+</div>
+<div class="inline-status error" hidden="" id="autovacuum-comparison-error"></div>
+<div class="comparison-content" hidden="" id="autovacuum-comparison-content">
+<div class="comparison-summary">
+<article class="metric-card"><span>Интервал</span><strong id="autovacuum-compare-interval">—</strong></article>
+<article class="metric-card"><span>stats_reset</span><strong id="autovacuum-compare-stats-period">—</strong></article>
+<article class="metric-card"><span>Total dead</span><strong id="autovacuum-compare-total-dead">—</strong></article>
+<article class="metric-card"><span>Dead trigger tables</span><strong id="autovacuum-compare-dead-reached">—</strong></article>
+<article class="metric-card"><span>VACUUM cycles</span><strong id="autovacuum-compare-vacuum-cycles">—</strong></article>
+<article class="metric-card"><span>ANALYZE cycles</span><strong id="autovacuum-compare-analyze-cycles">—</strong></article>
+</div>
+<p class="hint" id="autovacuum-compare-meta"></p>
+<div class="diagnostic-section">
+<h4>Интерпретация интервала</h4>
+<div class="interpretation-list" id="autovacuum-comparison-interpretation-list"></div>
+</div>
+<div class="diagnostic-section comparison-relations" id="autovacuum-compare-tables-section">
+<h4>Table changes</h4>
+<div class="history-pager" data-autovacuum-pager="comparison"></div>
+<div class="table-wrap"><table>
+<thead><tr>
+<th>Relation</th><th>Profile</th><th>Δ ins/upd/del</th><th>Δ HOT</th><th>Dead old→new</th><th>TOAST dead / AV Δ</th><th>Dead/day</th><th>Days to trigger</th><th>Trigger old→new</th><th>VACUUM Δ</th><th>ANALYZE Δ</th><th>Size Δ</th><th>State</th>
+</tr></thead>
+<tbody id="autovacuum-compare-table-list"></tbody>
+</table></div>
+<div class="history-pager" data-autovacuum-pager="comparison"></div>
+</div>
+<details class="comparison-limitations"><summary>Ограничения сравнения</summary><ul id="autovacuum-compare-limitations"></ul></details>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>

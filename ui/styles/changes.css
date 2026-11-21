@@ -1,0 +1,138 @@
+/* What Changed? period comparison */
+
+.changes-period-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(280px, 1fr) minmax(280px, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+  margin-bottom: 18px;
+}
+
+.changes-period-controls fieldset {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 12px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.changes-period-controls legend {
+  padding: 0 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.changes-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+
+.changes-marker-form {
+  display: grid;
+  grid-template-columns: minmax(180px, .8fr) minmax(150px, .6fr) minmax(220px, 1fr) minmax(240px, 1.2fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.changes-marker-list,
+.changes-timeline {
+  display: grid;
+  gap: 10px;
+}
+
+.changes-marker-item,
+.changes-timeline-item {
+  display: grid;
+  grid-template-columns: minmax(145px, auto) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+}
+
+.changes-marker-item p,
+.changes-timeline-item p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.changes-marker-meta,
+.changes-timeline-meta {
+  color: var(--muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.changes-timeline-item[data-phase="incident"] {
+  border-left-width: 4px;
+}
+
+.changes-evidence-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 6px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.changes-save-controls {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.changes-limitations-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 12px;
+}
+
+.changes-limitations-grid ul {
+  margin-bottom: 0;
+}
+
+#changes-pgss-list,
+#changes-autovacuum-list,
+#changes-xid-list {
+  font-variant-numeric: tabular-nums;
+}
+
+#changes-autovacuum-list td:nth-child(9) {
+  min-width: 260px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 1100px) {
+  .changes-period-controls,
+  .changes-marker-form {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .changes-period-controls,
+  .changes-marker-form,
+  .changes-save-controls,
+  .changes-limitations-grid,
+  .changes-marker-item,
+  .changes-timeline-item {
+    grid-template-columns: 1fr;
+  }
+
+  .changes-period-controls fieldset {
+    grid-template-columns: 1fr;
+  }
+}

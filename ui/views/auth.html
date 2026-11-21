@@ -1,0 +1,41 @@
+<section hidden="" id="registration-screen">
+<h1>Создать первого пользователя pgXray</h1>
+<p>
+      Это локальная учётная запись для входа в pgXray.
+      Пользователь создаётся только один раз при первой установке.
+    </p>
+<form id="registration-form">
+<label>
+        Логин
+        <input autocomplete="username" maxlength="64" name="username" pattern="[A-Za-z0-9_-]{1,64}" required=""/>
+</label>
+<label>
+        Пароль
+        <input autocomplete="new-password" maxlength="1024" minlength="12" name="password" required="" type="password"/>
+</label>
+<label>
+        Повторите пароль
+        <input autocomplete="new-password" maxlength="1024" minlength="12" name="confirm" required="" type="password"/>
+</label>
+<button>Создать пользователя</button>
+</form>
+</section>
+
+<section hidden="" id="login-screen">
+<h1>Войти в pgXray</h1>
+<p>
+      Используйте локальную учётную запись pgXray,
+      созданную при первой регистрации.
+    </p>
+<form id="login-form">
+<label>
+        Логин приложения
+        <input autocomplete="username" maxlength="64" name="username" required=""/>
+</label>
+<label>
+        Пароль приложения
+        <input autocomplete="current-password" maxlength="1024" name="password" required="" type="password"/>
+</label>
+<button>Войти</button>
+</form>
+</section>

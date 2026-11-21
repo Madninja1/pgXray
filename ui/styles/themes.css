@@ -1,0 +1,84 @@
+/* UI themes */
+
+.main-nav-item.active,
+.xid-tab.active,
+.pgss-tab.active,
+.autovacuum-tab.active {
+  border-color: var(--border);
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+.subnav-item.active {
+  border-color: var(--border);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.theme-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.theme-card {
+  display: grid;
+  justify-items: stretch;
+  gap: 12px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-2);
+  color: var(--text);
+  text-align: left;
+  font-weight: 400;
+}
+
+.theme-card:hover {
+  border-color: var(--border-strong);
+}
+
+.theme-card.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.theme-card strong {
+  font-size: 15px;
+}
+
+.theme-card small {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.theme-preview {
+  display: block;
+  height: 58px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.theme-card[data-theme-choice="graphite-teal"] .theme-preview {
+  background:
+          linear-gradient(135deg, #0d141b 0 64%, #38d6c2 64% 76%, #151f29 76%);
+}
+
+.theme-card[data-theme-choice="forest-mint"] .theme-preview {
+  background:
+          linear-gradient(135deg, #071812 0 64%, #67e8a3 64% 76%, #0c241b 76%);
+}
+
+.theme-card[data-theme-choice="indigo-cyan"] .theme-preview {
+  background:
+          linear-gradient(135deg, #081427 0 64%, #22d3ee 64% 76%, #0e1d35 76%);
+}
+
+.theme-card[data-theme-choice="light"] .theme-preview {
+  background:
+          linear-gradient(135deg, #f3f6f8 0 64%, #0f9f91 64% 76%, #ffffff 76%);
+}
+
+#theme-current {
+  margin-top: 14px;
+}

@@ -1,0 +1,13 @@
+# Development-only overlay. The regular Tauri.toml and existing UI remain unchanged.
+# A distinct app ID isolates auth, connections, history and workspace data.
+productName = "pgXray Vue Preview"
+identifier = "dev.pgxray.desktop.vuepreview"
+
+[build]
+devUrl = "http://127.0.0.1:5173"
+frontendDist = "../ui-vue/build"
+
+[app.security]
+# Vite injects development CSS and opens a localhost WebSocket for HMR.
+# This dev-only CSP does not change the production CSP in Tauri.toml.
+devCsp = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src ipc: http://ipc.localhost http://127.0.0.1:5173 ws://127.0.0.1:5173; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'none'"

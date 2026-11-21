@@ -1,5 +1,5 @@
 productName = "pgXray"
-version = "0.5.6"
+version = "0.5.7"
 identifier = "dev.pgxray.desktop"
 [build]
 # Vue is the primary UI for both development and packaged builds.

@@ -2,7 +2,7 @@
 
 **PostgreSQL Investigation & Change Intelligence Toolkit** — a local desktop application for investigating PostgreSQL health and performance using Rust, Tauri 2 and Vue 3.
 
-> **Development preview (v0.5.6).** Not validated for production use. Do not connect to critical databases before reviewing permissions and operational risks.
+> **Development preview (v0.5.7).** Not validated for production use. Do not connect to critical databases before reviewing permissions and operational risks.
 
 ## What it is for
 

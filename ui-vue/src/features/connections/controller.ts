@@ -225,6 +225,10 @@ function parseSavedConnection(value: unknown): SavedConnection {
       (!Number.isSafeInteger(v.project_id) || (v.project_id as number) <= 0)) {
     throw new Error(t('tsConnections.badProjectId'));
   }
+  if (v.shortcut_slot !== undefined && v.shortcut_slot !== null &&
+      (!Number.isInteger(v.shortcut_slot) || (v.shortcut_slot as number) < 0 || (v.shortcut_slot as number) > 9)) {
+    throw new Error(t('tsConnections.badList'));
+  }
   // The Rust response carries only a bounded historical summary, never secrets.
   let last_probe: PersistedConnectionProbe | null | undefined;
   if (Object.prototype.hasOwnProperty.call(v, "last_probe")) {
@@ -250,6 +254,7 @@ function parseSavedConnection(value: unknown): SavedConnection {
     port: v.port as number, database: v.database as string, username: v.username as string,
     sslmode: v.sslmode as string, has_password: v.has_password as boolean,
     ...(v.project_id !== undefined ? { project_id: v.project_id as number | null } : {}),
+    ...(v.shortcut_slot !== undefined ? { shortcut_slot: v.shortcut_slot as number | null } : {}),
     ...(last_probe !== undefined ? { last_probe } : {}),
   };
 }

@@ -51,6 +51,19 @@ test("list_connections maps only safe fields, excluding accidental secrets", asy
   assert.equal(state.items[0].has_password, true);
 });
 
+test("refresh preserves saved numeric shortcuts, including zero and null", async () => {
+  const profiles = [example({ shortcut_slot: 1 }), example({ id: 43, shortcut_slot: 0 }),
+    example({ id: 44, shortcut_slot: null })];
+  const { state, controller } = setup(async () => profiles);
+  assert.equal(await controller.refresh(), true);
+  assert.deepEqual(state.items, profiles);
+  assert.equal(await controller.refresh(), true);
+  assert.deepEqual(state.items, profiles);
+  for (const slot of [-1, 10, 1.5, "1"]) {
+    assert.throws(() => parseSavedConnections([example({ shortcut_slot: slot })]));
+  }
+});
+
 test("malformed list response cannot replace a valid list", async () => {
   let malformed = false;
   const { state, controller } = setup(async () => malformed ? [{ ...example(), port: "5432" }] : [example()]);

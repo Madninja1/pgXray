@@ -12,6 +12,7 @@ import {
   createConnectionsController,
   createConnectionsState,
   formatProbeTimestamp,
+  parseSavedConnections,
   savedPasswordTargetChanged,
   type ConnectionField,
   type SavedConnection,
@@ -42,7 +43,7 @@ async function setShortcut(connection: SavedConnection, raw: string): Promise<vo
   if (slot !== null && (!Number.isInteger(slot) || slot < 0 || slot > 9)) return;
   shortcutSavingId.value = connection.id;
   try {
-    const rows = await props.invoke<SavedConnection[]>("assign_connection_shortcut", { connectionId: connection.id, slot });
+    const rows = parseSavedConnections(await props.invoke<unknown>("assign_connection_shortcut", { connectionId: connection.id, slot }));
     state.items = rows;
     emit("connections-changed", rows);
     notice.value = slot === null ? t("connections.shortcutRemoved", { name: connection.name }) : t("connections.shortcutAssigned", { slot: String(slot), name: connection.name });
